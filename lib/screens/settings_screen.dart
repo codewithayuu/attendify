@@ -4,10 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../providers/settings_provider.dart';
 import '../providers/theme_provider.dart';
-import '../services/notification_service.dart';
-import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});

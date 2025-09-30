@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/subject.dart';
-import '../models/attendance.dart';
 import '../providers/subject_provider.dart' as subjects;
 import '../services/schedule_service.dart';
 import '../utils/app_theme.dart';

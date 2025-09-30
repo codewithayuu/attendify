@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import '../models/subject.dart';
-import '../utils/app_theme.dart';
 
 class AttendanceChart extends StatelessWidget {
   final List<Subject> subjects;

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../models/subject.dart';
-import '../models/attendance_record.dart';
 import '../providers/attendance_provider.dart';
 import '../utils/app_theme.dart';
 
