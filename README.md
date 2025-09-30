@@ -286,5 +286,5 @@ For support, email support@attendancetracker.com or create an issue in the repos
 
 ---
 
-**Built with ❤️ using Flutter**
+**Built with ❤️ by iambatman**
 
