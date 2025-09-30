@@ -29,5 +29,5 @@ flutter run
 
 ---
 
-*Built with ❤️ by iambatman*
+Built with ❤️ by iambatman
 
