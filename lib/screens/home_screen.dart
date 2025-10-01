@@ -9,7 +9,7 @@ import '../services/notification_service.dart';
 import '../widgets/subject_card_enhanced.dart';
 import 'today_classes_screen.dart';
 import '../widgets/attendance_summary_card.dart';
-import '../widgets/quick_actions.dart';
+import '../widgets/upcoming_classes.dart';
 import '../widgets/empty_state_widget.dart';
 import 'analytics_screen.dart';
 import 'settings_screen.dart';
@@ -88,7 +88,6 @@ class DashboardTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final subjects = ref.watch(subjectListProvider);
     final overallStats = ref.watch(overallStatsProvider);
-    final todayAttendance = ref.watch(todayAttendanceProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -168,9 +167,10 @@ class DashboardTab extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: QuickActions(
-                  todayAttendance: todayAttendance,
-                ).animate().fadeIn(duration: 300.ms, delay: 300.ms).slideY(),
+                child: const UpcomingClasses()
+                    .animate()
+                    .fadeIn(duration: 300.ms, delay: 300.ms)
+                    .slideY(),
               ),
             ),
 

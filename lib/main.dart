@@ -77,7 +77,8 @@ class AttendanceTrackerApp extends ConsumerWidget {
       routes: {
         '/add-subject': (context) => const AddSubjectScreenEnhanced(),
         '/edit-subject': (context) {
-          final subject = ModalRoute.of(context)!.settings.arguments as Subject?;
+          final subject =
+              ModalRoute.of(context)!.settings.arguments as Subject?;
           return AddSubjectScreenEnhanced(subject: subject);
         },
         '/analytics': (context) => const AnalyticsScreen(),

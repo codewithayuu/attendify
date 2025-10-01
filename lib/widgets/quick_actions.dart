@@ -28,7 +28,7 @@ class QuickActions extends ConsumerWidget {
           child: Row(
             children: [
               const Icon(
-                Icons.check_circle,
+                Icons.check_circle, //to be done 
                 color: Colors.green,
                 size: 24,
               ),

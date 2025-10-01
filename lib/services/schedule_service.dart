@@ -235,4 +235,74 @@ class ScheduleService {
     // Implementation would depend on your attendance model
     return null;
   }
+
+  /// Get upcoming classes for the next specified number of days
+  ///
+  /// [subjects] - List of subjects to check for upcoming classes
+  /// [daysAhead] - Number of days to look ahead (default: 7)
+  /// Returns a list of upcoming class information
+  static List<Map<String, dynamic>> getUpcomingClasses(
+    List<dynamic> subjects, {
+    int daysAhead = 7,
+  }) {
+    final List<Map<String, dynamic>> upcomingClasses = [];
+    final now = DateTime.now();
+    final endDate = now.add(Duration(days: daysAhead));
+
+    for (final subject in subjects) {
+      if (subject.weekdays.isEmpty) continue;
+
+      // Parse start time from subject
+      final timeParts = subject.startTime.split(':');
+      final startTime = TimeOfDay(
+        hour: int.parse(timeParts[0]),
+        minute: int.parse(timeParts[1]),
+      );
+
+      // Generate occurrences for the next daysAhead days
+      final classDates = generateOccurrences(
+        start: now,
+        end: endDate,
+        weekdays: subject.weekdays,
+        startTime: startTime,
+      );
+
+      // Add each upcoming class to the list
+      for (final classDate in classDates) {
+        upcomingClasses.add({
+          'subject': subject,
+          'subjectId': subject.id,
+          'subjectName': subject.name,
+          'date': classDate,
+          'time': startTime,
+          'dayName': _getDayName(classDate.weekday),
+          'isToday': _isToday(classDate),
+          'isPast': classDate.isBefore(now),
+        });
+      }
+    }
+
+    // Sort by date and time
+    upcomingClasses.sort((a, b) {
+      final dateA = a['date'] as DateTime;
+      final dateB = b['date'] as DateTime;
+      return dateA.compareTo(dateB);
+    });
+
+    return upcomingClasses;
+  }
+
+  /// Helper method to get day name from weekday number
+  static String _getDayName(int weekday) {
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return dayNames[weekday - 1];
+  }
+
+  /// Helper method to check if date is today
+  static bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
 }
