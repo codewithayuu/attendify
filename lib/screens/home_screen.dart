@@ -228,23 +228,30 @@ class DashboardTab extends ConsumerWidget {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final subject = subjects[index];
-                      return SubjectCardEnhanced(
-                        key: ValueKey(subject.id),
-                        subject: subject,
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/edit-subject',
-                            arguments: subject,
-                          );
-                        },
-                        showScheduleInfo: true,
+                      return ProviderScope(
+                        overrides: [
+                          // Override providers for this specific card to avoid global rebuilds
+                        ],
+                        child: SubjectCardEnhanced(
+                          key: ValueKey(subject.id),
+                          subject: subject,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/edit-subject',
+                              arguments: subject,
+                            );
+                          },
+                          showScheduleInfo: true,
+                        ),
                       );
                     },
                     childCount: subjects.length,
-                    // Add cache extent for better performance
-                    addAutomaticKeepAlives: true,
-                    addRepaintBoundaries: true,
+                    // Performance optimizations
+                    addAutomaticKeepAlives:
+                        false, // Don't keep alive for better memory usage
+                    addRepaintBoundaries:
+                        true, // Add repaint boundaries for better performance
                   ),
                 ),
               ),

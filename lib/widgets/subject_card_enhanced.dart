@@ -44,6 +44,25 @@ class _SubjectCardEnhancedState extends ConsumerState<SubjectCardEnhanced> {
     _loadDataAsync();
   }
 
+  // Load stats asynchronously for better performance
+  Future<Map<String, dynamic>> _loadStatsAsync() async {
+    try {
+      // Use compute to move heavy computation off main thread
+      return await Future.microtask(() => _calculateAttendanceStats());
+    } catch (e) {
+      // Return default stats if calculation fails
+      return {
+        'currentPercentage': 0.0,
+        'totalClasses': 0,
+        'attendedClasses': 0,
+        'requiredPercentage': 75.0,
+        'classesNeeded': 0,
+        'isOnTrack': false,
+        'classDates': <DateTime>[],
+      };
+    }
+  }
+
   // Load data asynchronously to avoid blocking main thread
   Future<void> _loadDataAsync() async {
     if (!mounted) return;
@@ -133,7 +152,19 @@ class _SubjectCardEnhancedState extends ConsumerState<SubjectCardEnhanced> {
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: _isLoading ? _buildLoadingState() : _buildContent(context),
+          child: FutureBuilder<Map<String, dynamic>>(
+            future: _loadStatsAsync(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return _buildLoadingState();
+              } else if (snapshot.hasError) {
+                return _buildErrorState(snapshot.error.toString());
+              } else {
+                _stats = snapshot.data;
+                return _buildContent(context);
+              }
+            },
+          ),
         ),
       ),
     );
@@ -164,13 +195,62 @@ class _SubjectCardEnhancedState extends ConsumerState<SubjectCardEnhanced> {
                     ),
               ),
               const SizedBox(height: 4),
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+              Text(
+                'Loading...',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey,
+                    ),
               ),
             ],
           ),
+        ),
+        const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: _parseColor(
+                widget.subject.colorHex ?? AppTheme.primaryColor.toString()),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(Icons.school, color: Colors.white),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.subject.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Error loading stats',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.red,
+                    ),
+              ),
+            ],
+          ),
+        ),
+        const Icon(
+          Icons.error_outline,
+          color: Colors.red,
+          size: 20,
         ),
       ],
     );

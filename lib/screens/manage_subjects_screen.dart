@@ -133,29 +133,38 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ...defaultSubjects.map((subjectData) {
-                      final existingSubject = subjectsList.firstWhere(
-                        (s) => s.name == subjectData['name'],
-                        orElse: () => Subject(
-                          name: subjectData['name'],
-                          description: subjectData['description'],
-                          colorHex: subjectData['colorHex'],
-                          totalClasses: 0,
-                          attendedClasses: 0,
-                        ),
-                      );
-                      
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: SubjectCard(
-                          subject: existingSubject,
-                          onTap: () => _showSubjectDetails(context, existingSubject),
-                          showActions: true,
-                          onEdit: () => _editSubject(existingSubject),
-                          onDelete: () => _deleteSubject(existingSubject),
-                        ),
-                      );
-                    }),
+                    SizedBox(
+                      height: defaultSubjects.length * 120.0, // Approximate height per card
+                      child: ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: defaultSubjects.length,
+                        itemBuilder: (context, index) {
+                          final subjectData = defaultSubjects[index];
+                          final existingSubject = subjectsList.firstWhere(
+                            (s) => s.name == subjectData['name'],
+                            orElse: () => Subject(
+                              name: subjectData['name'],
+                              description: subjectData['description'],
+                              colorHex: subjectData['colorHex'],
+                              totalClasses: 0,
+                              attendedClasses: 0,
+                            ),
+                          );
+                          
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: SubjectCard(
+                              key: ValueKey('default_${existingSubject.id}'),
+                              subject: existingSubject,
+                              onTap: () => _showSubjectDetails(context, existingSubject),
+                              showActions: true,
+                              onEdit: () => _editSubject(existingSubject),
+                              onDelete: () => _deleteSubject(existingSubject),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                     
                     const SizedBox(height: 16),
                   ],
@@ -169,16 +178,27 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ...customSubjects.map((subject) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SubjectCard(
-                        subject: subject,
-                        onTap: () => _showSubjectDetails(context, subject),
-                        showActions: true,
-                        onEdit: () => _editSubject(subject),
-                        onDelete: () => _deleteSubject(subject),
+                    SizedBox(
+                      height: customSubjects.length * 120.0, // Approximate height per card
+                      child: ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: customSubjects.length,
+                        itemBuilder: (context, index) {
+                          final subject = customSubjects[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: SubjectCard(
+                              key: ValueKey('custom_${subject.id}'),
+                              subject: subject,
+                              onTap: () => _showSubjectDetails(context, subject),
+                              showActions: true,
+                              onEdit: () => _editSubject(subject),
+                              onDelete: () => _deleteSubject(subject),
+                            ),
+                          );
+                        },
                       ),
-                    )),
+                    ),
                   ],
                   
                   // Empty State
