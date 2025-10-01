@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subject.dart';
 import '../models/attendance_record.dart';
 import '../models/attendance.dart';
@@ -30,6 +31,9 @@ class HiveService {
     _attendanceBox = await Hive.openBox<AttendanceRecord>(_attendanceBoxName);
     _settingsBox = await Hive.openBox<AppSettings>(_settingsBoxName);
 
+    // Run data migrations
+    await _runMigrations();
+
     // Initialize default settings if not exists
     await _initializeDefaultSettings();
 
@@ -42,6 +46,127 @@ class HiveService {
     if (_settingsBox!.isEmpty) {
       final defaultSettings = AppSettings();
       await _settingsBox!.put('default', defaultSettings);
+    }
+  }
+
+  // Run data migrations for new fields
+  static Future<void> _runMigrations() async {
+    await _migrateSubjects();
+    await _migrateAppSettings();
+  }
+
+  // Migrate Subject objects to add new fields
+  static Future<void> _migrateSubjects() async {
+    // Check if migration has already been run using SharedPreferences
+    const migrationKey = 'subject_migration_v1';
+    final prefs = await SharedPreferences.getInstance();
+    final hasRunMigration = prefs.getBool(migrationKey) ?? false;
+
+    if (hasRunMigration) {
+      return; // Migration already completed
+    }
+
+    final subjects = _subjectsBox!.values.toList();
+    bool needsMigration = false;
+
+    // Check if any subjects need migration by looking for subjects without new fields
+    // We'll use a heuristic: if all subjects have empty weekdays and default times,
+    // they likely need migration
+    for (final subject in subjects) {
+      if (subject.weekdays.isEmpty &&
+          subject.startTime == '09:00' &&
+          subject.endTime == '10:00' &&
+          subject.semesterStart.year == subject.createdAt.year) {
+        needsMigration = true;
+        break;
+      }
+    }
+
+    if (needsMigration) {
+      print('Migrating ${subjects.length} subjects to add new fields...');
+
+      for (final subject in subjects) {
+        // Create a new subject with the same data but with new field defaults
+        final migratedSubject = Subject(
+          id: subject.id,
+          name: subject.name,
+          totalClasses: subject.totalClasses,
+          attendedClasses: subject.attendedClasses,
+          description: subject.description,
+          createdAt: subject.createdAt,
+          updatedAt: subject.updatedAt,
+          colorHex: subject.colorHex,
+          weekdays: subject.weekdays.isNotEmpty ? subject.weekdays : [],
+          startTime: subject.startTime,
+          endTime: subject.endTime,
+          semesterStart: subject.semesterStart,
+          semesterEnd: subject.semesterEnd,
+          attendanceRecords: subject.attendanceRecords,
+          recurringWeekly: true, // Default to true for existing subjects
+          requiredPercent: null, // Use global default
+        );
+
+        await _subjectsBox!.put(subject.id, migratedSubject);
+      }
+
+      // Mark migration as completed
+      await prefs.setBool(migrationKey, true);
+      print('Subject migration completed successfully');
+    }
+  }
+
+  // Migrate AppSettings objects to add new fields
+  static Future<void> _migrateAppSettings() async {
+    // Check if migration has already been run using SharedPreferences
+    const migrationKey = 'settings_migration_v1';
+    final prefs = await SharedPreferences.getInstance();
+    final hasRunMigration = prefs.getBool(migrationKey) ?? false;
+
+    if (hasRunMigration) {
+      return; // Migration already completed
+    }
+
+    final settings = _settingsBox!.values.toList();
+    bool needsMigration = false;
+
+    for (final settingsItem in settings) {
+      // Check if settings need migration by looking for null values in new fields
+      if (settingsItem.semesterStart == null ||
+          settingsItem.semesterEnd == null) {
+        needsMigration = true;
+        break;
+      }
+    }
+
+    if (needsMigration) {
+      print('Migrating ${settings.length} settings to add new fields...');
+
+      for (final settingsItem in settings) {
+        // Create new settings with defaults for new fields
+        final migratedSettings = AppSettings(
+          isDarkMode: settingsItem.isDarkMode,
+          enableNotifications: settingsItem.enableNotifications,
+          notificationTime: settingsItem.notificationTime,
+          enableFirebaseSync: settingsItem.enableFirebaseSync,
+          attendanceThreshold: settingsItem.attendanceThreshold,
+          showPercentageOnCards: settingsItem.showPercentageOnCards,
+          defaultSubjectColor: settingsItem.defaultSubjectColor,
+          enableHapticFeedback: settingsItem.enableHapticFeedback,
+          languageCode: settingsItem.languageCode,
+          lastSyncTime: settingsItem.lastSyncTime,
+          showDefaultSubjects: settingsItem.showDefaultSubjects,
+          semesterStart: settingsItem.semesterStart ?? DateTime.now(),
+          semesterEnd: settingsItem.semesterEnd ??
+              DateTime.now().add(const Duration(days: 90)),
+          defaultRequiredPercent: 75.0, // Default value
+        );
+
+        await _settingsBox!.put('default', migratedSettings);
+      }
+
+      // Mark migration as completed
+      await prefs.setBool(migrationKey, true);
+      print('Settings migration completed successfully');
     }
   }
 
