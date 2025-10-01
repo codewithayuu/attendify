@@ -31,13 +31,15 @@ class SubjectAdapter extends TypeAdapter<Subject> {
       semesterStart: fields[11] as DateTime?,
       semesterEnd: fields[12] as DateTime?,
       attendanceRecords: (fields[13] as List).cast<Attendance>(),
+      recurringWeekly: fields[14] as bool,
+      requiredPercent: fields[15] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Subject obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -65,7 +67,11 @@ class SubjectAdapter extends TypeAdapter<Subject> {
       ..writeByte(12)
       ..write(obj.semesterEnd)
       ..writeByte(13)
-      ..write(obj.attendanceRecords);
+      ..write(obj.attendanceRecords)
+      ..writeByte(14)
+      ..write(obj.recurringWeekly)
+      ..writeByte(15)
+      ..write(obj.requiredPercent);
   }
 
   @override

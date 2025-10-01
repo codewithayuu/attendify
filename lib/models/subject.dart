@@ -49,6 +49,13 @@ class Subject extends HiveObject {
   @HiveField(13)
   List<Attendance> attendanceRecords;
 
+  // Additional schedule fields
+  @HiveField(14)
+  final bool recurringWeekly; // true = weekly recurring
+
+  @HiveField(15)
+  final double? requiredPercent; // allows per-sub override; null => use global
+
   Subject({
     String? id,
     required this.name,
@@ -64,11 +71,14 @@ class Subject extends HiveObject {
     DateTime? semesterStart,
     DateTime? semesterEnd,
     this.attendanceRecords = const [],
+    this.recurringWeekly = true,
+    this.requiredPercent,
   })  : id = id ?? const Uuid().v4(),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now(),
         semesterStart = semesterStart ?? DateTime.now(),
-        semesterEnd = semesterEnd ?? DateTime.now().add(const Duration(days: 90));
+        semesterEnd =
+            semesterEnd ?? DateTime.now().add(const Duration(days: 90));
 
   // Calculate attendance percentage based on attendance records
   double get attendancePercentage {
@@ -81,7 +91,8 @@ class Subject extends HiveObject {
   int get totalClassesFromRecords => attendanceRecords.length;
 
   // Get attended classes from attendance records
-  int get attendedClassesFromRecords => attendanceRecords.where((a) => a.present).length;
+  int get attendedClassesFromRecords =>
+      attendanceRecords.where((a) => a.present).length;
 
   // Check if subject has class on a specific weekday
   bool hasClassOnWeekday(int weekday) => weekdays.contains(weekday);
@@ -92,7 +103,8 @@ class Subject extends HiveObject {
   // Check if subject is active (within semester period)
   bool get isActive {
     final now = DateTime.now();
-    return now.isAfter(semesterStart) && now.isBefore(semesterEnd.add(const Duration(days: 1)));
+    return now.isAfter(semesterStart) &&
+        now.isBefore(semesterEnd.add(const Duration(days: 1)));
   }
 
   // Check if subject has class today and is active
@@ -102,11 +114,11 @@ class Subject extends HiveObject {
   DateTime? get nextClassDate {
     final now = DateTime.now();
     DateTime current = now;
-    
+
     // Look for next class within the next 7 days
     for (int i = 0; i < 7; i++) {
-      if (hasClassOnWeekday(current.weekday) && 
-          current.isAfter(semesterStart) && 
+      if (hasClassOnWeekday(current.weekday) &&
+          current.isAfter(semesterStart) &&
           current.isBefore(semesterEnd.add(const Duration(days: 1)))) {
         return current;
       }
@@ -142,6 +154,8 @@ class Subject extends HiveObject {
     String? description,
     DateTime? updatedAt,
     String? colorHex,
+    bool? recurringWeekly,
+    double? requiredPercent,
   }) {
     return Subject(
       id: id,
@@ -152,6 +166,14 @@ class Subject extends HiveObject {
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       colorHex: colorHex ?? this.colorHex,
+      weekdays: weekdays,
+      startTime: startTime,
+      endTime: endTime,
+      semesterStart: semesterStart,
+      semesterEnd: semesterEnd,
+      attendanceRecords: attendanceRecords,
+      recurringWeekly: recurringWeekly ?? this.recurringWeekly,
+      requiredPercent: requiredPercent ?? this.requiredPercent,
     );
   }
 
