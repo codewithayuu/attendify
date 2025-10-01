@@ -103,8 +103,10 @@ class AttendanceChart extends StatelessWidget {
   }
 
   Widget _buildLegend() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Wrap(
+      alignment: WrapAlignment.spaceEvenly,
+      spacing: 8.0,
+      runSpacing: 8.0,
       children: [
         _buildLegendItem('Good (≥75%)', Colors.green),
         _buildLegendItem('Average (60-75%)', Colors.orange),
@@ -126,9 +128,12 @@ class AttendanceChart extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12),
+        Flexible(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );

@@ -169,8 +169,10 @@ class AttendanceTrendChart extends StatelessWidget {
             .fold(0.0, (sum, p) => sum + p) /
         (daysWithAttendance > 0 ? daysWithAttendance : 1);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Wrap(
+      alignment: WrapAlignment.spaceEvenly,
+      spacing: 8.0,
+      runSpacing: 8.0,
       children: [
         _buildStatItem('Total Days', totalDays.toString()),
         _buildStatItem('Days with Attendance', daysWithAttendance.toString()),
@@ -181,20 +183,28 @@ class AttendanceTrendChart extends StatelessWidget {
 
   Widget _buildStatItem(String label, String value) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.primaryColor,
+        Flexible(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.primaryColor,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
+        Flexible(
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ),
       ],
