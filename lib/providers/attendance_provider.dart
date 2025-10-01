@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../models/attendance_record.dart';
 import '../services/hive_service.dart';
 import '../services/firebase_service.dart';
@@ -6,13 +7,15 @@ import '../services/notification_service.dart';
 import 'subject_provider.dart';
 
 // Attendance records provider
-final attendanceRecordsProvider = StateNotifierProvider<AttendanceRecordsNotifier, List<AttendanceRecord>>((ref) {
+final attendanceRecordsProvider =
+    StateNotifierProvider<AttendanceRecordsNotifier, List<AttendanceRecord>>(
+        (ref) {
   return AttendanceRecordsNotifier(ref);
 });
 
 class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
   final Ref ref;
-  
+
   AttendanceRecordsNotifier(this.ref) : super([]) {
     loadAttendanceRecords();
   }
@@ -27,21 +30,20 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
   Future<void> addAttendanceRecord(AttendanceRecord record) async {
     await HiveService.addAttendanceRecord(record);
     state = [...state, record];
-    
+
     // Update subject statistics
     final subjectNotifier = ref.read(subjectListProvider.notifier);
     await subjectNotifier.markAttendance(
-      record.subjectId, 
-      record.status.countsAsPresent
-    );
-    
+        record.subjectId, record.status.countsAsPresent);
+
     // Send notification
     final subject = ref.read(subjectListProvider).firstWhere(
-      (s) => s.id == record.subjectId,
-      orElse: () => throw StateError('Subject not found'),
-    );
-    await NotificationService.sendAttendanceMarkedConfirmation(subject, record.status);
-    
+          (s) => s.id == record.subjectId,
+          orElse: () => throw StateError('Subject not found'),
+        );
+    await NotificationService.sendAttendanceMarkedConfirmation(
+        subject, record.status);
+
     // Sync to cloud if enabled
     final settings = HiveService.getSettings();
     if (settings.enableFirebaseSync && FirebaseService.isSignedIn) {
@@ -53,7 +55,7 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
   Future<void> updateAttendanceRecord(AttendanceRecord record) async {
     await HiveService.updateAttendanceRecord(record);
     state = state.map((r) => r.id == record.id ? record : r).toList();
-    
+
     // Sync to cloud if enabled
     final settings = HiveService.getSettings();
     if (settings.enableFirebaseSync && FirebaseService.isSignedIn) {
@@ -66,14 +68,12 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
     final record = state.firstWhere((r) => r.id == recordId);
     await HiveService.deleteAttendanceRecord(recordId);
     state = state.where((r) => r.id != recordId).toList();
-    
+
     // Update subject statistics
     final subjectNotifier = ref.read(subjectListProvider.notifier);
     await subjectNotifier.undoLastAttendance(
-      record.subjectId, 
-      record.status.countsAsPresent
-    );
-    
+        record.subjectId, record.status.countsAsPresent);
+
     // Sync to cloud if enabled
     final settings = HiveService.getSettings();
     if (settings.enableFirebaseSync && FirebaseService.isSignedIn) {
@@ -82,7 +82,8 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
   }
 
   // Mark attendance for today
-  Future<void> markTodayAttendance(String subjectId, AttendanceStatus status) async {
+  Future<void> markTodayAttendance(
+      String subjectId, AttendanceStatus status) async {
     // Check if already marked for today
     if (HiveService.isAttendanceMarkedForToday(subjectId)) {
       // Update existing record
@@ -94,6 +95,7 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
     } else {
       // Create new record
       final record = AttendanceRecord(
+        id: const Uuid().v4(),
         subjectId: subjectId,
         date: DateTime.now(),
         status: status,
@@ -110,17 +112,22 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
 
   // Get attendance records for a specific date
   List<AttendanceRecord> getRecordsForDate(DateTime date) {
-    return state.where((r) => 
-        r.date.year == date.year &&
-        r.date.month == date.month &&
-        r.date.day == date.day).toList();
+    return state
+        .where((r) =>
+            r.date.year == date.year &&
+            r.date.month == date.month &&
+            r.date.day == date.day)
+        .toList();
   }
 
   // Get attendance records for date range
-  List<AttendanceRecord> getRecordsForDateRange(DateTime startDate, DateTime endDate) {
-    return state.where((r) => 
-        r.date.isAfter(startDate.subtract(const Duration(days: 1))) &&
-        r.date.isBefore(endDate.add(const Duration(days: 1)))).toList()
+  List<AttendanceRecord> getRecordsForDateRange(
+      DateTime startDate, DateTime endDate) {
+    return state
+        .where((r) =>
+            r.date.isAfter(startDate.subtract(const Duration(days: 1))) &&
+            r.date.isBefore(endDate.add(const Duration(days: 1))))
+        .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
 
@@ -129,7 +136,8 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
     if (!FirebaseService.isSignedIn) return;
 
     try {
-      final cloudRecords = await FirebaseService.syncAttendanceRecordsFromCloud();
+      final cloudRecords =
+          await FirebaseService.syncAttendanceRecordsFromCloud();
       if (cloudRecords.isNotEmpty) {
         // Clear local records and replace with cloud data
         await HiveService.clearAllData();
@@ -148,11 +156,13 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
 final todayAttendanceProvider = Provider<List<AttendanceRecord>>((ref) {
   final records = ref.watch(attendanceRecordsProvider);
   final today = DateTime.now();
-  
-  return records.where((r) => 
-      r.date.year == today.year &&
-      r.date.month == today.month &&
-      r.date.day == today.day).toList();
+
+  return records
+      .where((r) =>
+          r.date.year == today.year &&
+          r.date.month == today.month &&
+          r.date.day == today.day)
+      .toList();
 });
 
 // Weekly attendance provider
@@ -161,10 +171,12 @@ final weeklyAttendanceProvider = Provider<List<AttendanceRecord>>((ref) {
   final now = DateTime.now();
   final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
   final endOfWeek = startOfWeek.add(const Duration(days: 6));
-  
-  return records.where((r) => 
-      r.date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-      r.date.isBefore(endOfWeek.add(const Duration(days: 1)))).toList()
+
+  return records
+      .where((r) =>
+          r.date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          r.date.isBefore(endOfWeek.add(const Duration(days: 1))))
+      .toList()
     ..sort((a, b) => b.date.compareTo(a.date));
 });
 
@@ -174,18 +186,22 @@ final monthlyAttendanceProvider = Provider<List<AttendanceRecord>>((ref) {
   final now = DateTime.now();
   final startOfMonth = DateTime(now.year, now.month, 1);
   final endOfMonth = DateTime(now.year, now.month + 1, 0);
-  
-  return records.where((r) => 
-      r.date.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
-      r.date.isBefore(endOfMonth.add(const Duration(days: 1)))).toList()
+
+  return records
+      .where((r) =>
+          r.date.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
+          r.date.isBefore(endOfMonth.add(const Duration(days: 1))))
+      .toList()
     ..sort((a, b) => b.date.compareTo(a.date));
 });
 
 // Attendance statistics provider
-final attendanceStatsProvider = Provider.family<Map<String, dynamic>, String>((ref, subjectId) {
+final attendanceStatsProvider =
+    Provider.family<Map<String, dynamic>, String>((ref, subjectId) {
   final records = ref.watch(attendanceRecordsProvider);
-  final subjectRecords = records.where((r) => r.subjectId == subjectId).toList();
-  
+  final subjectRecords =
+      records.where((r) => r.subjectId == subjectId).toList();
+
   final stats = <String, int>{
     'total': subjectRecords.length,
     'present': 0,
@@ -196,16 +212,16 @@ final attendanceStatsProvider = Provider.family<Map<String, dynamic>, String>((r
 
   for (final record in subjectRecords) {
     switch (record.status) {
-      case AttendanceStatus.present:
+      case AttendanceStatus.Present:
         stats['present'] = stats['present']! + 1;
         break;
-      case AttendanceStatus.absent:
+      case AttendanceStatus.Absent:
         stats['absent'] = stats['absent']! + 1;
         break;
-      case AttendanceStatus.late:
+      case AttendanceStatus.Late:
         stats['late'] = stats['late']! + 1;
         break;
-      case AttendanceStatus.excused:
+      case AttendanceStatus.Excused:
         stats['excused'] = stats['excused']! + 1;
         break;
     }
@@ -218,14 +234,15 @@ final attendanceStatsProvider = Provider.family<Map<String, dynamic>, String>((r
 final weeklyStatsProvider = Provider<Map<String, dynamic>>((ref) {
   final records = ref.watch(weeklyAttendanceProvider);
   final subjects = ref.watch(subjectListProvider);
-  
+
   final stats = <String, dynamic>{
     'totalRecords': records.length,
     'subjects': <String, Map<String, int>>{},
   };
 
   for (final subject in subjects) {
-    final subjectRecords = records.where((r) => r.subjectId == subject.id).toList();
+    final subjectRecords =
+        records.where((r) => r.subjectId == subject.id).toList();
     final subjectStats = <String, int>{
       'total': subjectRecords.length,
       'present': 0,
@@ -236,16 +253,16 @@ final weeklyStatsProvider = Provider<Map<String, dynamic>>((ref) {
 
     for (final record in subjectRecords) {
       switch (record.status) {
-        case AttendanceStatus.present:
+        case AttendanceStatus.Present:
           subjectStats['present'] = subjectStats['present']! + 1;
           break;
-        case AttendanceStatus.absent:
+        case AttendanceStatus.Absent:
           subjectStats['absent'] = subjectStats['absent']! + 1;
           break;
-        case AttendanceStatus.late:
+        case AttendanceStatus.Late:
           subjectStats['late'] = subjectStats['late']! + 1;
           break;
-        case AttendanceStatus.excused:
+        case AttendanceStatus.Excused:
           subjectStats['excused'] = subjectStats['excused']! + 1;
           break;
       }
@@ -261,14 +278,15 @@ final weeklyStatsProvider = Provider<Map<String, dynamic>>((ref) {
 final monthlyStatsProvider = Provider<Map<String, dynamic>>((ref) {
   final records = ref.watch(monthlyAttendanceProvider);
   final subjects = ref.watch(subjectListProvider);
-  
+
   final stats = <String, dynamic>{
     'totalRecords': records.length,
     'subjects': <String, Map<String, int>>{},
   };
 
   for (final subject in subjects) {
-    final subjectRecords = records.where((r) => r.subjectId == subject.id).toList();
+    final subjectRecords =
+        records.where((r) => r.subjectId == subject.id).toList();
     final subjectStats = <String, int>{
       'total': subjectRecords.length,
       'present': 0,
@@ -279,16 +297,16 @@ final monthlyStatsProvider = Provider<Map<String, dynamic>>((ref) {
 
     for (final record in subjectRecords) {
       switch (record.status) {
-        case AttendanceStatus.present:
+        case AttendanceStatus.Present:
           subjectStats['present'] = subjectStats['present']! + 1;
           break;
-        case AttendanceStatus.absent:
+        case AttendanceStatus.Absent:
           subjectStats['absent'] = subjectStats['absent']! + 1;
           break;
-        case AttendanceStatus.late:
+        case AttendanceStatus.Late:
           subjectStats['late'] = subjectStats['late']! + 1;
           break;
-        case AttendanceStatus.excused:
+        case AttendanceStatus.Excused:
           subjectStats['excused'] = subjectStats['excused']! + 1;
           break;
       }
@@ -305,20 +323,23 @@ final attendanceTrendProvider = Provider<List<Map<String, dynamic>>>((ref) {
   final records = ref.watch(attendanceRecordsProvider);
   final now = DateTime.now();
   final thirtyDaysAgo = now.subtract(const Duration(days: 30));
-  
+
   final trendData = <Map<String, dynamic>>[];
-  
+
   for (int i = 0; i < 30; i++) {
     final date = thirtyDaysAgo.add(Duration(days: i));
-    final dayRecords = records.where((r) => 
-        r.date.year == date.year &&
-        r.date.month == date.month &&
-        r.date.day == date.day).toList();
-    
-    final presentCount = dayRecords.where((r) => r.status.countsAsPresent).length;
+    final dayRecords = records
+        .where((r) =>
+            r.date.year == date.year &&
+            r.date.month == date.month &&
+            r.date.day == date.day)
+        .toList();
+
+    final presentCount =
+        dayRecords.where((r) => r.status.countsAsPresent).length;
     final totalCount = dayRecords.length;
     final percentage = totalCount > 0 ? (presentCount / totalCount) * 100 : 0.0;
-    
+
     trendData.add({
       'date': date,
       'present': presentCount,
@@ -326,7 +347,6 @@ final attendanceTrendProvider = Provider<List<Map<String, dynamic>>>((ref) {
       'percentage': percentage,
     });
   }
-  
+
   return trendData;
 });
-

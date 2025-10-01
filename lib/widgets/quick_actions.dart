@@ -172,7 +172,7 @@ class QuickActions extends ConsumerWidget {
             onPressed: () {
               ref.read(attendanceRecordsProvider.notifier).markTodayAttendance(
                     subject.id,
-                    AttendanceStatus.absent,
+                    AttendanceStatus.Absent,
                   );
               Navigator.of(context).pop();
             },
@@ -182,7 +182,7 @@ class QuickActions extends ConsumerWidget {
             onPressed: () {
               ref.read(attendanceRecordsProvider.notifier).markTodayAttendance(
                     subject.id,
-                    AttendanceStatus.present,
+                    AttendanceStatus.Present,
                   );
               Navigator.of(context).pop();
             },
@@ -247,7 +247,7 @@ class QuickActions extends ConsumerWidget {
                                     .read(attendanceRecordsProvider.notifier)
                                     .markTodayAttendance(
                                       subject.id,
-                                      AttendanceStatus.absent,
+                                      AttendanceStatus.Absent,
                                     );
                               },
                             ),
@@ -259,7 +259,7 @@ class QuickActions extends ConsumerWidget {
                                     .read(attendanceRecordsProvider.notifier)
                                     .markTodayAttendance(
                                       subject.id,
-                                      AttendanceStatus.present,
+                                      AttendanceStatus.Present,
                                     );
                               },
                             ),

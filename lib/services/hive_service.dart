@@ -173,16 +173,16 @@ class HiveService {
 
     for (final record in records) {
       switch (record.status) {
-        case AttendanceStatus.present:
+        case AttendanceStatus.Present:
           stats['present'] = stats['present']! + 1;
           break;
-        case AttendanceStatus.absent:
+        case AttendanceStatus.Absent:
           stats['absent'] = stats['absent']! + 1;
           break;
-        case AttendanceStatus.late:
+        case AttendanceStatus.Late:
           stats['late'] = stats['late']! + 1;
           break;
-        case AttendanceStatus.excused:
+        case AttendanceStatus.Excused:
           stats['excused'] = stats['excused']! + 1;
           break;
       }

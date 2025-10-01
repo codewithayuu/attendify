@@ -98,7 +98,9 @@ class DashboardTab extends ConsumerWidget {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               ref.read(subjectListProvider.notifier).loadSubjects();
-              ref.read(attendanceRecordsProvider.notifier).loadAttendanceRecords();
+              ref
+                  .read(attendanceRecordsProvider.notifier)
+                  .loadAttendanceRecords();
             },
           ),
           // Test button for attendance functionality
@@ -111,7 +113,9 @@ class DashboardTab extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           await ref.read(subjectListProvider.notifier).loadSubjects();
-          await ref.read(attendanceRecordsProvider.notifier).loadAttendanceRecords();
+          await ref
+              .read(attendanceRecordsProvider.notifier)
+              .loadAttendanceRecords();
         },
         child: CustomScrollView(
           slivers: [
@@ -130,9 +134,16 @@ class DashboardTab extends ConsumerWidget {
                     Text(
                       'Track your attendance and stay on top of your studies',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
-                      ),
-                    ).animate().fadeIn(duration: 300.ms, delay: 100.ms).slideX(),
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.color
+                                ?.withOpacity(0.7),
+                          ),
+                    )
+                        .animate()
+                        .fadeIn(duration: 300.ms, delay: 100.ms)
+                        .slideX(),
                   ],
                 ),
               ),
@@ -175,14 +186,20 @@ class DashboardTab extends ConsumerWidget {
                     Text(
                       'Your Subjects',
                       style: Theme.of(context).textTheme.titleLarge,
-                    ).animate().fadeIn(duration: 300.ms, delay: 400.ms).slideX(),
+                    )
+                        .animate()
+                        .fadeIn(duration: 300.ms, delay: 400.ms)
+                        .slideX(),
                     if (subjects.isNotEmpty)
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/add-subject');
                         },
                         child: const Text('Add New'),
-                      ).animate().fadeIn(duration: 300.ms, delay: 500.ms).slideX(),
+                      )
+                          .animate()
+                          .fadeIn(duration: 300.ms, delay: 500.ms)
+                          .slideX(),
                   ],
                 ),
               ),
@@ -196,7 +213,8 @@ class DashboardTab extends ConsumerWidget {
                 child: EmptyStateWidget(
                   icon: Icons.school_outlined,
                   title: 'No Subjects Yet',
-                  subtitle: 'Add your first subject to start tracking attendance',
+                  subtitle:
+                      'Add your first subject to start tracking attendance',
                   actionText: 'Add Subject',
                   onAction: () {
                     Navigator.pushNamed(context, '/add-subject');
@@ -279,18 +297,24 @@ void _showTestDialog(BuildContext context, WidgetRef ref) {
                 final subjects = ref.read(subjectListProvider);
                 if (subjects.isNotEmpty) {
                   final testSubject = subjects.first;
-                  await ref.read(attendanceRecordsProvider.notifier).markTodayAttendance(
-                    testSubject.id,
-                    AttendanceStatus.present,
-                  );
+                  await ref
+                      .read(attendanceRecordsProvider.notifier)
+                      .markTodayAttendance(
+                        testSubject.id,
+                        AttendanceStatus.Present,
+                      );
                   print('✅ Test Attendance Added for ${testSubject.name}');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('✅ Test attendance added for ${testSubject.name}')),
+                    SnackBar(
+                        content: Text(
+                            '✅ Test attendance added for ${testSubject.name}')),
                   );
                 } else {
                   print('⚠️ No subjects available for testing');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('⚠️ No subjects available. Add a subject first.')),
+                    const SnackBar(
+                        content: Text(
+                            '⚠️ No subjects available. Add a subject first.')),
                   );
                 }
               } catch (e) {
@@ -313,7 +337,9 @@ void _showTestDialog(BuildContext context, WidgetRef ref) {
                   print('📅 ${record.date} - Status: ${record.status}');
                 }
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('📊 Found ${records.length} attendance records')),
+                  SnackBar(
+                      content: Text(
+                          '📊 Found ${records.length} attendance records')),
                 );
               } catch (e) {
                 print('❌ Error fetching attendance: $e');
@@ -334,16 +360,20 @@ void _showTestDialog(BuildContext context, WidgetRef ref) {
                   final testSubject = subjects.first;
                   await NotificationService.sendAttendanceMarkedConfirmation(
                     testSubject,
-                    AttendanceStatus.present,
+                    AttendanceStatus.Present,
                   );
                   print('✅ Test notification sent for ${testSubject.name}');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('✅ Test notification sent for ${testSubject.name}')),
+                    SnackBar(
+                        content: Text(
+                            '✅ Test notification sent for ${testSubject.name}')),
                   );
                 } else {
                   print('⚠️ No subjects available for testing notifications');
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('⚠️ No subjects available. Add a subject first.')),
+                    const SnackBar(
+                        content: Text(
+                            '⚠️ No subjects available. Add a subject first.')),
                   );
                 }
               } catch (e) {

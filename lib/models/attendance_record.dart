@@ -1,37 +1,30 @@
 import 'package:hive/hive.dart';
-import 'package:uuid/uuid.dart';
 
 part 'attendance_record.g.dart';
 
-@HiveType(typeId: 1)
-class AttendanceRecord extends HiveObject {
+@HiveType(typeId: 4) // pick an unused typeId
+class AttendanceRecord {
   @HiveField(0)
   final String id;
-
   @HiveField(1)
   final String subjectId;
-
   @HiveField(2)
   final DateTime date;
-
   @HiveField(3)
   final AttendanceStatus status;
-
   @HiveField(4)
   final DateTime createdAt;
-
   @HiveField(5)
   String? notes;
 
   AttendanceRecord({
-    String? id,
+    required this.id,
     required this.subjectId,
     required this.date,
     required this.status,
     DateTime? createdAt,
     this.notes,
-  })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now();
 
   // Copy with method for updates
   AttendanceRecord copyWith({
@@ -61,7 +54,7 @@ class AttendanceRecord extends HiveObject {
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
-    
+
     return date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
         date.isBefore(endOfWeek.add(const Duration(days: 1)));
   }
@@ -87,70 +80,53 @@ class AttendanceRecord extends HiveObject {
   int get hashCode => id.hashCode;
 }
 
-@HiveType(typeId: 2)
+@HiveType(typeId: 5)
 enum AttendanceStatus {
   @HiveField(0)
-  present,
-  
+  Present,
   @HiveField(1)
-  absent,
-  
+  Absent,
   @HiveField(2)
-  late,
-  
+  Late,
   @HiveField(3)
-  excused,
+  Excused,
 }
 
 extension AttendanceStatusExtension on AttendanceStatus {
   String get displayName {
     switch (this) {
-      case AttendanceStatus.present:
+      case AttendanceStatus.Present:
         return 'Present';
-      case AttendanceStatus.absent:
+      case AttendanceStatus.Absent:
         return 'Absent';
-      case AttendanceStatus.late:
+      case AttendanceStatus.Late:
         return 'Late';
-      case AttendanceStatus.excused:
+      case AttendanceStatus.Excused:
         return 'Excused';
     }
   }
 
   String get emoji {
     switch (this) {
-      case AttendanceStatus.present:
+      case AttendanceStatus.Present:
         return '✅';
-      case AttendanceStatus.absent:
+      case AttendanceStatus.Absent:
         return '❌';
-      case AttendanceStatus.late:
+      case AttendanceStatus.Late:
         return '⏰';
-      case AttendanceStatus.excused:
+      case AttendanceStatus.Excused:
         return '📝';
     }
   }
 
   bool get countsAsPresent {
     switch (this) {
-      case AttendanceStatus.present:
-      case AttendanceStatus.late:
+      case AttendanceStatus.Present:
+      case AttendanceStatus.Late:
         return true;
-      case AttendanceStatus.absent:
-      case AttendanceStatus.excused:
+      case AttendanceStatus.Absent:
+      case AttendanceStatus.Excused:
         return false;
     }
   }
-
-  String get colorHex {
-    switch (this) {
-      case AttendanceStatus.present:
-        return '#4CAF50'; // Green
-      case AttendanceStatus.absent:
-        return '#F44336'; // Red
-      case AttendanceStatus.late:
-        return '#FF9800'; // Orange
-      case AttendanceStatus.excused:
-        return '#2196F3'; // Blue
-    }
-  }
 }
-

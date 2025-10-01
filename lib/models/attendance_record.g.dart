@@ -8,7 +8,7 @@ part of 'attendance_record.dart';
 
 class AttendanceRecordAdapter extends TypeAdapter<AttendanceRecord> {
   @override
-  final int typeId = 1;
+  final int typeId = 4;
 
   @override
   AttendanceRecord read(BinaryReader reader) {
@@ -17,7 +17,7 @@ class AttendanceRecordAdapter extends TypeAdapter<AttendanceRecord> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return AttendanceRecord(
-      id: fields[0] as String?,
+      id: fields[0] as String,
       subjectId: fields[1] as String,
       date: fields[2] as DateTime,
       status: fields[3] as AttendanceStatus,
@@ -57,37 +57,37 @@ class AttendanceRecordAdapter extends TypeAdapter<AttendanceRecord> {
 
 class AttendanceStatusAdapter extends TypeAdapter<AttendanceStatus> {
   @override
-  final int typeId = 2;
+  final int typeId = 5;
 
   @override
   AttendanceStatus read(BinaryReader reader) {
     switch (reader.readByte()) {
       case 0:
-        return AttendanceStatus.present;
+        return AttendanceStatus.Present;
       case 1:
-        return AttendanceStatus.absent;
+        return AttendanceStatus.Absent;
       case 2:
-        return AttendanceStatus.late;
+        return AttendanceStatus.Late;
       case 3:
-        return AttendanceStatus.excused;
+        return AttendanceStatus.Excused;
       default:
-        return AttendanceStatus.present;
+        return AttendanceStatus.Present;
     }
   }
 
   @override
   void write(BinaryWriter writer, AttendanceStatus obj) {
     switch (obj) {
-      case AttendanceStatus.present:
+      case AttendanceStatus.Present:
         writer.writeByte(0);
         break;
-      case AttendanceStatus.absent:
+      case AttendanceStatus.Absent:
         writer.writeByte(1);
         break;
-      case AttendanceStatus.late:
+      case AttendanceStatus.Late:
         writer.writeByte(2);
         break;
-      case AttendanceStatus.excused:
+      case AttendanceStatus.Excused:
         writer.writeByte(3);
         break;
     }
