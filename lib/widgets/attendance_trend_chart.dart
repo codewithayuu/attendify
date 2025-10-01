@@ -13,7 +13,7 @@ class AttendanceTrendChart extends StatelessWidget {
     if (trendData.isEmpty) {
       return Card(
         child: Container(
-          height: 200,
+          height: 240,
           padding: const EdgeInsets.all(16),
           child: const Center(
             child: Text('No data to display'),
@@ -27,6 +27,7 @@ class AttendanceTrendChart extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               '30-Day Attendance Trend',
@@ -36,8 +37,10 @@ class AttendanceTrendChart extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 200,
-              child: LineChart(
+              height: 240,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: LineChart(
                 LineChartData(
                   gridData: FlGridData(
                     show: true,
@@ -127,6 +130,7 @@ class AttendanceTrendChart extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
                 ),
               ),
             ),

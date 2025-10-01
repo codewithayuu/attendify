@@ -65,11 +65,12 @@ class AnalyticsScreen extends ConsumerWidget {
                 await ref.read(subjectListProvider.notifier).loadSubjects();
                 await ref.read(attendanceRecordsProvider.notifier).loadAttendanceRecords();
               },
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     // Overall stats card
                     _buildOverallStatsCard(context, overallStats)
                         .animate()
@@ -163,7 +164,8 @@ class AnalyticsScreen extends ConsumerWidget {
                         .slideY(),
 
                     const SizedBox(height: 100), // Bottom padding
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

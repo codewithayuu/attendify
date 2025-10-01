@@ -13,7 +13,7 @@ class AttendanceChart extends StatelessWidget {
     if (subjects.isEmpty) {
       return Card(
         child: Container(
-          height: 200,
+          height: 240,
           padding: const EdgeInsets.all(16),
           child: const Center(
             child: Text('No data to display'),
@@ -27,6 +27,7 @@ class AttendanceChart extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'Attendance Overview',
@@ -36,12 +37,15 @@ class AttendanceChart extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  sections: _buildSections(),
-                  centerSpaceRadius: 60,
-                  sectionsSpace: 2,
+              height: 240,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: PieChart(
+                  PieChartData(
+                    sections: _buildSections(),
+                    centerSpaceRadius: 60,
+                    sectionsSpace: 2,
+                  ),
                 ),
               ),
             ),
