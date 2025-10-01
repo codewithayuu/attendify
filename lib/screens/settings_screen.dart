@@ -337,7 +337,7 @@ class SettingsScreen extends ConsumerWidget {
     return Card(
       child: ListTile(
         title: const Text('Semester Start Date'),
-        subtitle: Text(semesterStart != null 
+        subtitle: Text(semesterStart != null
             ? '${semesterStart.day}/${semesterStart.month}/${semesterStart.year}'
             : 'Not set'),
         leading: const Icon(Icons.calendar_today),
@@ -349,13 +349,12 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSemesterEndTile(
-      BuildContext context, WidgetRef ref, settings) {
+  Widget _buildSemesterEndTile(BuildContext context, WidgetRef ref, settings) {
     final semesterEnd = settings.semesterEnd;
     return Card(
       child: ListTile(
         title: const Text('Semester End Date'),
-        subtitle: Text(semesterEnd != null 
+        subtitle: Text(semesterEnd != null
             ? '${semesterEnd.day}/${semesterEnd.month}/${semesterEnd.year}'
             : 'Not set'),
         leading: const Icon(Icons.calendar_today),
@@ -372,7 +371,8 @@ class SettingsScreen extends ConsumerWidget {
     return Card(
       child: ListTile(
         title: const Text('Global Attendance Threshold'),
-        subtitle: Text('Default required percentage: ${settings.defaultRequiredPercent}%'),
+        subtitle: Text(
+            'Default required percentage: ${settings.defaultRequiredPercent}%'),
         leading: const Icon(Icons.percent),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
@@ -381,7 +381,6 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
-
 
   Widget _buildFirebaseSyncTile(BuildContext context, WidgetRef ref, settings) {
     return const Card(
@@ -674,9 +673,10 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _showSemesterEndPicker(BuildContext context, WidgetRef ref, settings) {
-    final currentDate = settings.semesterEnd ?? DateTime.now().add(const Duration(days: 90));
+    final currentDate =
+        settings.semesterEnd ?? DateTime.now().add(const Duration(days: 90));
     final semesterStart = settings.semesterStart ?? DateTime.now();
-    
+
     showDatePicker(
       context: context,
       initialDate: currentDate,
@@ -689,7 +689,8 @@ class SettingsScreen extends ConsumerWidget {
     });
   }
 
-  void _showGlobalThresholdPicker(BuildContext context, WidgetRef ref, settings) {
+  void _showGlobalThresholdPicker(
+      BuildContext context, WidgetRef ref, settings) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -706,7 +707,9 @@ class SettingsScreen extends ConsumerWidget {
               divisions: 20,
               label: '${settings.defaultRequiredPercent}%',
               onChanged: (value) {
-                ref.read(settingsProvider.notifier).updateDefaultRequiredPercent(value);
+                ref
+                    .read(settingsProvider.notifier)
+                    .updateDefaultRequiredPercent(value);
               },
             ),
             const SizedBox(height: 8),

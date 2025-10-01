@@ -232,7 +232,11 @@ class DashboardTab extends ConsumerWidget {
                         key: ValueKey(subject.id),
                         subject: subject,
                         onTap: () {
-                          // Navigate to subject details
+                          Navigator.pushNamed(
+                            context,
+                            '/edit-subject',
+                            arguments: subject,
+                          );
                         },
                         showScheduleInfo: true,
                       );

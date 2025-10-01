@@ -6,6 +6,7 @@ import 'package:timezone/data/latest.dart' as tz;
 
 import 'services/hive_service.dart';
 import 'services/notification_service.dart';
+import 'models/subject.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_subject_screen_enhanced.dart';
 import 'screens/analytics_screen.dart';
@@ -75,6 +76,10 @@ class AttendanceTrackerApp extends ConsumerWidget {
       home: const HomeScreen(),
       routes: {
         '/add-subject': (context) => const AddSubjectScreenEnhanced(),
+        '/edit-subject': (context) {
+          final subject = ModalRoute.of(context)!.settings.arguments as Subject?;
+          return AddSubjectScreenEnhanced(subject: subject);
+        },
         '/analytics': (context) => const AnalyticsScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/manage-subjects': (context) => const ManageSubjectsScreen(),
