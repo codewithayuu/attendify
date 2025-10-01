@@ -68,14 +68,24 @@ class SettingsScreen extends ConsumerWidget {
         const SizedBox(height: 24),
 
         // Attendance section
-        _buildSectionHeader(context, 'Attendance')
+        _buildSectionHeader(context, 'Semester & Attendance')
             .animate()
             .fadeIn(duration: 300.ms, delay: 700.ms)
             .slideX(),
 
-        _buildAttendanceThresholdTile(context, ref, settings)
+        _buildSemesterStartTile(context, ref, settings)
+            .animate()
+            .fadeIn(duration: 300.ms, delay: 750.ms)
+            .slideX(),
+
+        _buildSemesterEndTile(context, ref, settings)
             .animate()
             .fadeIn(duration: 300.ms, delay: 800.ms)
+            .slideX(),
+
+        _buildGlobalThresholdTile(context, ref, settings)
+            .animate()
+            .fadeIn(duration: 300.ms, delay: 850.ms)
             .slideX(),
 
         const SizedBox(height: 24),
@@ -321,20 +331,57 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAttendanceThresholdTile(
+  Widget _buildSemesterStartTile(
       BuildContext context, WidgetRef ref, settings) {
+    final semesterStart = settings.semesterStart;
     return Card(
       child: ListTile(
-        title: const Text('Attendance Threshold'),
-        subtitle: Text('Warning threshold: ${settings.attendanceThreshold}%'),
-        leading: const Icon(Icons.warning),
+        title: const Text('Semester Start Date'),
+        subtitle: Text(semesterStart != null 
+            ? '${semesterStart.day}/${semesterStart.month}/${semesterStart.year}'
+            : 'Not set'),
+        leading: const Icon(Icons.calendar_today),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
-          _showThresholdPicker(context, ref, settings);
+          _showSemesterStartPicker(context, ref, settings);
         },
       ),
     );
   }
+
+  Widget _buildSemesterEndTile(
+      BuildContext context, WidgetRef ref, settings) {
+    final semesterEnd = settings.semesterEnd;
+    return Card(
+      child: ListTile(
+        title: const Text('Semester End Date'),
+        subtitle: Text(semesterEnd != null 
+            ? '${semesterEnd.day}/${semesterEnd.month}/${semesterEnd.year}'
+            : 'Not set'),
+        leading: const Icon(Icons.calendar_today),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          _showSemesterEndPicker(context, ref, settings);
+        },
+      ),
+    );
+  }
+
+  Widget _buildGlobalThresholdTile(
+      BuildContext context, WidgetRef ref, settings) {
+    return Card(
+      child: ListTile(
+        title: const Text('Global Attendance Threshold'),
+        subtitle: Text('Default required percentage: ${settings.defaultRequiredPercent}%'),
+        leading: const Icon(Icons.percent),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          _showGlobalThresholdPicker(context, ref, settings);
+        },
+      ),
+    );
+  }
+
 
   Widget _buildFirebaseSyncTile(BuildContext context, WidgetRef ref, settings) {
     return const Card(
@@ -609,6 +656,74 @@ class SettingsScreen extends ConsumerWidget {
         const Text('• Dark mode support'),
         const Text('• Data export/import'),
       ],
+    );
+  }
+
+  void _showSemesterStartPicker(BuildContext context, WidgetRef ref, settings) {
+    final currentDate = settings.semesterStart ?? DateTime.now();
+    showDatePicker(
+      context: context,
+      initialDate: currentDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    ).then((date) {
+      if (date != null) {
+        ref.read(settingsProvider.notifier).updateSemesterStart(date);
+      }
+    });
+  }
+
+  void _showSemesterEndPicker(BuildContext context, WidgetRef ref, settings) {
+    final currentDate = settings.semesterEnd ?? DateTime.now().add(const Duration(days: 90));
+    final semesterStart = settings.semesterStart ?? DateTime.now();
+    
+    showDatePicker(
+      context: context,
+      initialDate: currentDate,
+      firstDate: semesterStart,
+      lastDate: DateTime.now().add(const Duration(days: 500)),
+    ).then((date) {
+      if (date != null) {
+        ref.read(settingsProvider.notifier).updateSemesterEnd(date);
+      }
+    });
+  }
+
+  void _showGlobalThresholdPicker(BuildContext context, WidgetRef ref, settings) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Global Attendance Threshold'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Current threshold: ${settings.defaultRequiredPercent}%'),
+            const SizedBox(height: 16),
+            Slider(
+              value: settings.defaultRequiredPercent,
+              min: 0,
+              max: 100,
+              divisions: 20,
+              label: '${settings.defaultRequiredPercent}%',
+              onChanged: (value) {
+                ref.read(settingsProvider.notifier).updateDefaultRequiredPercent(value);
+              },
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This is the default required attendance percentage for all subjects. Individual subjects can override this value.',
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
     );
   }
 }
