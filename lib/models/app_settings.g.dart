@@ -28,13 +28,16 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       languageCode: fields[8] as String,
       lastSyncTime: fields[9] as DateTime?,
       showDefaultSubjects: fields[10] as bool,
+      semesterStart: fields[11] as DateTime?,
+      semesterEnd: fields[12] as DateTime?,
+      defaultRequiredPercent: fields[13] as double,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.isDarkMode)
       ..writeByte(1)
@@ -56,7 +59,13 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(9)
       ..write(obj.lastSyncTime)
       ..writeByte(10)
-      ..write(obj.showDefaultSubjects);
+      ..write(obj.showDefaultSubjects)
+      ..writeByte(11)
+      ..write(obj.semesterStart)
+      ..writeByte(12)
+      ..write(obj.semesterEnd)
+      ..writeByte(13)
+      ..write(obj.defaultRequiredPercent);
   }
 
   @override

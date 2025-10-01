@@ -38,6 +38,16 @@ class AppSettings extends HiveObject {
   @HiveField(10)
   bool showDefaultSubjects;
 
+  // Semester and global threshold fields
+  @HiveField(11)
+  DateTime? semesterStart;
+
+  @HiveField(12)
+  DateTime? semesterEnd;
+
+  @HiveField(13)
+  double defaultRequiredPercent; // default 75.0
+
   AppSettings({
     this.isDarkMode = false,
     this.enableNotifications = true,
@@ -50,6 +60,9 @@ class AppSettings extends HiveObject {
     this.languageCode = 'en',
     DateTime? lastSyncTime,
     this.showDefaultSubjects = true,
+    this.semesterStart,
+    this.semesterEnd,
+    this.defaultRequiredPercent = 75.0,
   }) : lastSyncTime = lastSyncTime ?? DateTime.now();
 
   // Copy with method for updates
@@ -65,6 +78,9 @@ class AppSettings extends HiveObject {
     String? languageCode,
     DateTime? lastSyncTime,
     bool? showDefaultSubjects,
+    DateTime? semesterStart,
+    DateTime? semesterEnd,
+    double? defaultRequiredPercent,
   }) {
     return AppSettings(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -72,12 +88,17 @@ class AppSettings extends HiveObject {
       notificationTime: notificationTime ?? this.notificationTime,
       enableFirebaseSync: enableFirebaseSync ?? this.enableFirebaseSync,
       attendanceThreshold: attendanceThreshold ?? this.attendanceThreshold,
-      showPercentageOnCards: showPercentageOnCards ?? this.showPercentageOnCards,
+      showPercentageOnCards:
+          showPercentageOnCards ?? this.showPercentageOnCards,
       defaultSubjectColor: defaultSubjectColor ?? this.defaultSubjectColor,
       enableHapticFeedback: enableHapticFeedback ?? this.enableHapticFeedback,
       languageCode: languageCode ?? this.languageCode,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       showDefaultSubjects: showDefaultSubjects ?? this.showDefaultSubjects,
+      semesterStart: semesterStart ?? this.semesterStart,
+      semesterEnd: semesterEnd ?? this.semesterEnd,
+      defaultRequiredPercent:
+          defaultRequiredPercent ?? this.defaultRequiredPercent,
     );
   }
 
@@ -86,7 +107,7 @@ class AppSettings extends HiveObject {
     final timeParts = notificationTime.split(':');
     final hour = int.parse(timeParts[0]);
     final minute = int.parse(timeParts[1]);
-    
+
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day, hour, minute);
   }
@@ -94,10 +115,10 @@ class AppSettings extends HiveObject {
   // Check if notifications should be sent
   bool shouldSendNotification() {
     if (!enableNotifications) return false;
-    
+
     final now = DateTime.now();
     final notificationTime = notificationDateTime;
-    
+
     // Check if it's the notification time (within 1 minute)
     final timeDifference = now.difference(notificationTime).inMinutes.abs();
     return timeDifference <= 1;
@@ -121,7 +142,7 @@ class AppSettings extends HiveObject {
   // Load from SharedPreferences
   static Future<AppSettings> loadFromSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     return AppSettings(
       isDarkMode: prefs.getBool('isDarkMode') ?? false,
       enableNotifications: prefs.getBool('enableNotifications') ?? true,

@@ -75,6 +75,21 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     await updateSettings(newSettings);
   }
 
+  Future<void> updateSemesterStart(DateTime? semesterStart) async {
+    final newSettings = state.copyWith(semesterStart: semesterStart);
+    await updateSettings(newSettings);
+  }
+
+  Future<void> updateSemesterEnd(DateTime? semesterEnd) async {
+    final newSettings = state.copyWith(semesterEnd: semesterEnd);
+    await updateSettings(newSettings);
+  }
+
+  Future<void> updateDefaultRequiredPercent(double defaultRequiredPercent) async {
+    final newSettings = state.copyWith(defaultRequiredPercent: defaultRequiredPercent);
+    await updateSettings(newSettings);
+  }
+
   // Sync settings with cloud
   Future<void> syncWithCloud() async {
     if (!FirebaseService.isSignedIn) return;
@@ -133,6 +148,17 @@ final uiPreferencesProvider = Provider<Map<String, dynamic>>((ref) {
     'defaultSubjectColor': settings.defaultSubjectColor,
     'hapticFeedback': settings.enableHapticFeedback,
     'language': settings.languageCode,
+  };
+});
+
+// Semester settings provider
+final semesterSettingsProvider = Provider<Map<String, dynamic>>((ref) {
+  final settings = ref.watch(settingsProvider);
+  
+  return {
+    'semesterStart': settings.semesterStart,
+    'semesterEnd': settings.semesterEnd,
+    'defaultRequiredPercent': settings.defaultRequiredPercent,
   };
 });
 
