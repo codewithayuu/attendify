@@ -305,4 +305,60 @@ class ScheduleService {
         date.month == now.month &&
         date.day == now.day;
   }
+
+  /// Get classes scheduled for a specific date
+  ///
+  /// [subjects] - List of subjects to check for classes
+  /// [date] - The specific date to check for classes
+  /// Returns a list of class information for the given date
+  static List<Map<String, dynamic>> getClassesOnDate(
+    List<dynamic> subjects,
+    DateTime date,
+  ) {
+    final List<Map<String, dynamic>> classesOnDate = [];
+
+    for (final subject in subjects) {
+      if (subject.weekdays.isEmpty) continue;
+
+      // Check if subject has class on this weekday
+      if (!subject.weekdays.contains(date.weekday)) continue;
+
+      // Parse start time from subject
+      final timeParts = subject.startTime.split(':');
+      final startTime = TimeOfDay(
+        hour: int.parse(timeParts[0]),
+        minute: int.parse(timeParts[1]),
+      );
+
+      // Create the class date with the specific time
+      final classDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        startTime.hour,
+        startTime.minute,
+      );
+
+      classesOnDate.add({
+        'subject': subject,
+        'subjectId': subject.id,
+        'subjectName': subject.name,
+        'date': classDateTime,
+        'time': startTime,
+        'dayName': _getDayName(date.weekday),
+        'isToday': _isToday(date),
+        'isPast': classDateTime.isBefore(DateTime.now()),
+      });
+    }
+
+    // Sort by time
+    classesOnDate.sort((a, b) {
+      final timeA = a['time'] as TimeOfDay;
+      final timeB = b['time'] as TimeOfDay;
+      return (timeA.hour * 60 + timeA.minute)
+          .compareTo(timeB.hour * 60 + timeB.minute);
+    });
+
+    return classesOnDate;
+  }
 }

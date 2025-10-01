@@ -12,7 +12,8 @@ class UpcomingClasses extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final subjects = ref.watch(subjectListProvider);
-    final upcomingClasses = ScheduleService.getUpcomingClasses(subjects, daysAhead: 7);
+    final upcomingClasses =
+        ScheduleService.getUpcomingClasses(subjects, daysAhead: 7);
 
     if (upcomingClasses.isEmpty) {
       return Card(
@@ -117,9 +118,12 @@ class UpcomingClasses extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isToday ? Colors.blue.withOpacity(0.1) : Colors.grey.withOpacity(0.05),
+        color: isToday
+            ? Colors.blue.withOpacity(0.1)
+            : Colors.grey.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
-        border: isToday ? Border.all(color: Colors.blue.withOpacity(0.3)) : null,
+        border:
+            isToday ? Border.all(color: Colors.blue.withOpacity(0.3)) : null,
       ),
       child: Row(
         children: [
@@ -142,7 +146,8 @@ class UpcomingClasses extends ConsumerWidget {
                       dayName,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: isToday ? Colors.blue : Colors.grey[600],
-                            fontWeight: isToday ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight:
+                                isToday ? FontWeight.w600 : FontWeight.normal,
                           ),
                     ),
                     const SizedBox(width: 4),
@@ -155,18 +160,20 @@ class UpcomingClasses extends ConsumerWidget {
                     if (isToday) ...[
                       const SizedBox(width: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.blue,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           'TODAY',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ),
                     ],
@@ -199,7 +206,8 @@ class UpcomingClasses extends ConsumerWidget {
               ),
             ] else ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: isPresent ? Colors.green : Colors.red,
                   borderRadius: BorderRadius.circular(16),
@@ -287,7 +295,7 @@ class UpcomingClasses extends ConsumerWidget {
 
   void _markAttendance(WidgetRef ref, String subjectId, bool isPresent) {
     final attendanceProvider = ref.read(attendanceRecordsProvider.notifier);
-    
+
     final attendanceRecord = AttendanceRecord(
       id: '${subjectId}_${DateTime.now().millisecondsSinceEpoch}',
       subjectId: subjectId,

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../models/subject.dart';
-import '../providers/today_classes_provider.dart';
+import '../models/attendance_record.dart';
 import '../providers/subject_provider.dart' as subjects;
+import '../providers/attendance_provider.dart';
 import '../services/schedule_service.dart';
 
 class TodayClassesScreen extends ConsumerStatefulWidget {
@@ -17,17 +18,17 @@ class TodayClassesScreen extends ConsumerStatefulWidget {
 class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
   @override
   Widget build(BuildContext context) {
-    final todaySubjects = ref.watch(todayClassesProvider);
-    final todayStats = ref.watch(todayAttendanceStatsProvider);
-    final unmarkedSubjects = ref.watch(unmarkedAttendanceProvider);
-    final nextClass = ref.watch(nextClassProvider);
+    final allSubjects = ref.watch(subjects.subjectListProvider);
+    final todayClasses =
+        ScheduleService.getClassesOnDate(allSubjects, DateTime.now());
+    final todayAttendance = ref.watch(todayAttendanceProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Today's Classes"),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          if (unmarkedSubjects.isNotEmpty)
+          if (todayClasses.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.check_circle_outline),
               onPressed: _markAllPresent,
@@ -35,49 +36,27 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
             ),
         ],
       ),
-      body: todaySubjects.isEmpty
+      body: todayClasses.isEmpty
           ? _buildEmptyState()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Today's Stats
-                  _buildTodayStats(todayStats),
-
-                  const SizedBox(height: 24),
-
-                  // Next Class Info
-                  if (nextClass != null) ...[
-                    _buildNextClassCard(nextClass),
-                    const SizedBox(height: 24),
-                  ],
-
                   // Today's Classes Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Today's Classes (${todaySubjects.length})",
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      if (unmarkedSubjects.isNotEmpty)
-                        TextButton.icon(
-                          onPressed: _startMarkingAttendance,
-                          icon: const Icon(Icons.edit),
-                          label: const Text('Mark Attendance'),
+                  Text(
+                    "Today's Classes (${todayClasses.length})",
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                    ],
                   ),
 
                   const SizedBox(height: 16),
 
                   // Classes List
-                  ...todaySubjects.map((subject) => Padding(
+                  ...todayClasses.map((classInfo) => Padding(
                         padding: const EdgeInsets.only(bottom: 12.0),
-                        child: _buildSubjectCard(subject),
+                        child: _buildClassCard(classInfo, todayAttendance),
                       )),
 
                   const SizedBox(height: 100), // Bottom padding
@@ -264,10 +243,25 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
     ).animate().fadeIn(duration: 300.ms, delay: 100.ms).slideX();
   }
 
-  Widget _buildSubjectCard(Subject subject) {
-    final attendance = ScheduleService.getAttendanceForToday(subject);
-    final isMarked = attendance != null;
-    final isPresent = attendance?.present ?? false;
+  Widget _buildClassCard(
+      Map<String, dynamic> classInfo, List<AttendanceRecord> todayAttendance) {
+    final subjectName = classInfo['subjectName'] as String;
+    final time = classInfo['time'] as TimeOfDay;
+    final subjectId = classInfo['subjectId'] as String;
+    final subject = classInfo['subject'] as Subject;
+
+    // Check if attendance is already marked for this class
+    AttendanceRecord? existingRecord;
+    try {
+      existingRecord = todayAttendance.firstWhere(
+        (record) => record.subjectId == subjectId && record.isToday,
+      );
+    } catch (e) {
+      existingRecord = null;
+    }
+
+    final isMarked = existingRecord != null;
+    final isPresent = existingRecord?.status == AttendanceStatus.Present;
 
     return Card(
       child: Padding(
@@ -297,14 +291,14 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        subject.name,
+                        subjectName,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
                       ),
                       Text(
-                        '${subject.startTime} - ${subject.endTime}',
+                        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} - ${subject.endTime}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -348,7 +342,8 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _markAttendance(subject, false),
+                      onPressed: () =>
+                          _markAttendanceForClass(classInfo, false),
                       icon: const Icon(Icons.cancel, size: 18),
                       label: const Text('Absent'),
                       style: OutlinedButton.styleFrom(
@@ -360,7 +355,7 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _markAttendance(subject, true),
+                      onPressed: () => _markAttendanceForClass(classInfo, true),
                       icon: const Icon(Icons.check, size: 18),
                       label: const Text('Present'),
                       style: ElevatedButton.styleFrom(
@@ -390,39 +385,27 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
     return Colors.blue;
   }
 
-  Future<void> _markAttendance(Subject subject, bool present) async {
+  Future<void> _markAttendanceForClass(
+      Map<String, dynamic> classInfo, bool present) async {
     try {
-      final attendance =
-          ScheduleService.markAttendanceForToday(subject, present);
+      final subjectId = classInfo['subjectId'] as String;
+      final subjectName = classInfo['subjectName'] as String;
 
-      // Update the subject with the new attendance record
-      final updatedSubject = Subject(
-        id: subject.id,
-        name: subject.name,
-        description: subject.description,
-        colorHex: subject.colorHex,
-        weekdays: subject.weekdays,
-        startTime: subject.startTime,
-        endTime: subject.endTime,
-        semesterStart: subject.semesterStart,
-        semesterEnd: subject.semesterEnd,
-        totalClasses: subject.totalClasses,
-        attendanceRecords: [
-          ...subject.attendanceRecords
-              .where((a) => !a.isForDate(DateTime.now())),
-          attendance,
-        ],
+      final attendanceRecord = AttendanceRecord(
+        id: '${subjectId}_${DateTime.now().millisecondsSinceEpoch}',
+        subjectId: subjectId,
+        date: DateTime.now(),
+        status: present ? AttendanceStatus.Present : AttendanceStatus.Absent,
       );
 
-      await ref
-          .read(subjects.subjectListProvider.notifier)
-          .updateSubject(updatedSubject);
+      final attendanceProvider = ref.read(attendanceRecordsProvider.notifier);
+      await attendanceProvider.addAttendanceRecord(attendanceRecord);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Marked ${subject.name} as ${present ? 'Present' : 'Absent'}'),
+                'Marked $subjectName as ${present ? 'Present' : 'Absent'}'),
             backgroundColor: present ? Colors.green : Colors.orange,
             duration: const Duration(seconds: 2),
           ),
@@ -441,10 +424,22 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
   }
 
   Future<void> _markAllPresent() async {
-    final unmarkedSubjects = ref.read(unmarkedAttendanceProvider);
+    final allSubjects = ref.read(subjects.subjectListProvider);
+    final todayClasses =
+        ScheduleService.getClassesOnDate(allSubjects, DateTime.now());
+    final todayAttendance = ref.read(todayAttendanceProvider);
 
-    for (final subject in unmarkedSubjects) {
-      await _markAttendance(subject, true);
+    for (final classInfo in todayClasses) {
+      final subjectId = classInfo['subjectId'] as String;
+
+      // Check if already marked
+      final isAlreadyMarked = todayAttendance.any(
+        (record) => record.subjectId == subjectId && record.isToday,
+      );
+
+      if (!isAlreadyMarked) {
+        await _markAttendanceForClass(classInfo, true);
+      }
     }
   }
 
