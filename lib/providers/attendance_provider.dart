@@ -224,6 +224,9 @@ final attendanceStatsProvider =
       case AttendanceStatus.Excused:
         stats['excused'] = stats['excused']! + 1;
         break;
+      case AttendanceStatus.Unmarked:
+        // Unmarked records don't count towards any category
+        break;
     }
   }
 
@@ -264,6 +267,9 @@ final weeklyStatsProvider = Provider<Map<String, dynamic>>((ref) {
           break;
         case AttendanceStatus.Excused:
           subjectStats['excused'] = subjectStats['excused']! + 1;
+          break;
+        case AttendanceStatus.Unmarked:
+          // Unmarked records don't count towards any category
           break;
       }
     }
@@ -308,6 +314,9 @@ final monthlyStatsProvider = Provider<Map<String, dynamic>>((ref) {
           break;
         case AttendanceStatus.Excused:
           subjectStats['excused'] = subjectStats['excused']! + 1;
+          break;
+        case AttendanceStatus.Unmarked:
+          // Unmarked records don't count towards any category
           break;
       }
     }

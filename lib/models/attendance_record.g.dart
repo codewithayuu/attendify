@@ -70,6 +70,8 @@ class AttendanceStatusAdapter extends TypeAdapter<AttendanceStatus> {
         return AttendanceStatus.Late;
       case 3:
         return AttendanceStatus.Excused;
+      case 4:
+        return AttendanceStatus.Unmarked;
       default:
         return AttendanceStatus.Present;
     }
@@ -89,6 +91,9 @@ class AttendanceStatusAdapter extends TypeAdapter<AttendanceStatus> {
         break;
       case AttendanceStatus.Excused:
         writer.writeByte(3);
+        break;
+      case AttendanceStatus.Unmarked:
+        writer.writeByte(4);
         break;
     }
   }

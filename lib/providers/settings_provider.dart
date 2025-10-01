@@ -5,7 +5,8 @@ import '../services/firebase_service.dart';
 import '../services/notification_service.dart';
 
 // Settings provider
-final settingsProvider = StateNotifierProvider<SettingsNotifier, AppSettings>((ref) {
+final settingsProvider =
+    StateNotifierProvider<SettingsNotifier, AppSettings>((ref) {
   return SettingsNotifier();
 });
 
@@ -15,10 +16,10 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   Future<void> updateSettings(AppSettings newSettings) async {
     await HiveService.updateSettings(newSettings);
     state = newSettings;
-    
+
     // Update notification settings
     await NotificationService.updateNotificationSettings(newSettings);
-    
+
     // Sync to cloud if enabled
     if (newSettings.enableFirebaseSync && FirebaseService.isSignedIn) {
       await FirebaseService.syncSettingsToCloud(newSettings);
@@ -31,12 +32,14 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 
   Future<void> toggleNotifications() async {
-    final newSettings = state.copyWith(enableNotifications: !state.enableNotifications);
+    final newSettings =
+        state.copyWith(enableNotifications: !state.enableNotifications);
     await updateSettings(newSettings);
   }
 
   Future<void> toggleFirebaseSync() async {
-    final newSettings = state.copyWith(enableFirebaseSync: !state.enableFirebaseSync);
+    final newSettings =
+        state.copyWith(enableFirebaseSync: !state.enableFirebaseSync);
     await updateSettings(newSettings);
   }
 
@@ -51,7 +54,8 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 
   Future<void> toggleShowPercentageOnCards() async {
-    final newSettings = state.copyWith(showPercentageOnCards: !state.showPercentageOnCards);
+    final newSettings =
+        state.copyWith(showPercentageOnCards: !state.showPercentageOnCards);
     await updateSettings(newSettings);
   }
 
@@ -61,7 +65,8 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 
   Future<void> toggleHapticFeedback() async {
-    final newSettings = state.copyWith(enableHapticFeedback: !state.enableHapticFeedback);
+    final newSettings =
+        state.copyWith(enableHapticFeedback: !state.enableHapticFeedback);
     await updateSettings(newSettings);
   }
 
@@ -85,8 +90,10 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     await updateSettings(newSettings);
   }
 
-  Future<void> updateDefaultRequiredPercent(double defaultRequiredPercent) async {
-    final newSettings = state.copyWith(defaultRequiredPercent: defaultRequiredPercent);
+  Future<void> updateDefaultRequiredPercent(
+      double defaultRequiredPercent) async {
+    final newSettings =
+        state.copyWith(defaultRequiredPercent: defaultRequiredPercent);
     await updateSettings(newSettings);
   }
 
@@ -119,7 +126,7 @@ final themeProvider = Provider<AppSettings>((ref) {
 // Notification settings provider
 final notificationSettingsProvider = Provider<Map<String, dynamic>>((ref) {
   final settings = ref.watch(settingsProvider);
-  
+
   return {
     'enabled': settings.enableNotifications,
     'time': settings.notificationTime,
@@ -130,7 +137,7 @@ final notificationSettingsProvider = Provider<Map<String, dynamic>>((ref) {
 // Firebase sync status provider
 final firebaseSyncStatusProvider = Provider<Map<String, dynamic>>((ref) {
   final settings = ref.watch(settingsProvider);
-  
+
   return {
     'enabled': settings.enableFirebaseSync,
     'signedIn': FirebaseService.isSignedIn,
@@ -141,7 +148,7 @@ final firebaseSyncStatusProvider = Provider<Map<String, dynamic>>((ref) {
 // UI preferences provider
 final uiPreferencesProvider = Provider<Map<String, dynamic>>((ref) {
   final settings = ref.watch(settingsProvider);
-  
+
   return {
     'darkMode': settings.isDarkMode,
     'showPercentageOnCards': settings.showPercentageOnCards,
@@ -154,11 +161,10 @@ final uiPreferencesProvider = Provider<Map<String, dynamic>>((ref) {
 // Semester settings provider
 final semesterSettingsProvider = Provider<Map<String, dynamic>>((ref) {
   final settings = ref.watch(settingsProvider);
-  
+
   return {
     'semesterStart': settings.semesterStart,
     'semesterEnd': settings.semesterEnd,
     'defaultRequiredPercent': settings.defaultRequiredPercent,
   };
 });
-

@@ -201,12 +201,21 @@ class ScheduleService {
 
   /// Generate attendance records for a subject
   static List<dynamic> generateAttendanceRecords(
-    dynamic subject,
-    DateTime start,
+    String subjectId,
+    List<DateTime> classDates,
   ) {
-    // This would generate attendance records based on the schedule
-    // For now, return empty list as placeholder
-    return [];
+    // Import the AttendanceRecord model
+    // This will be implemented after we import the model
+    return classDates.map((date) {
+      // Create AttendanceRecord with Unmarked status
+      // This is a placeholder - will be properly implemented
+      return {
+        'id': '${subjectId}_${date.millisecondsSinceEpoch}',
+        'subjectId': subjectId,
+        'date': date,
+        'status': 'Unmarked',
+      };
+    }).toList();
   }
 
   /// Get attendance stats for a subject

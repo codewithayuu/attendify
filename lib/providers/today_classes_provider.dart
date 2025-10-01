@@ -7,7 +7,8 @@ import 'subject_provider.dart';
 // Today's classes provider - shows subjects that have class today
 final todayClassesProvider = Provider<List<Subject>>((ref) {
   final subjects = ref.watch(subjectListProvider);
-  return ScheduleService.getSubjectsWithClassToday(subjects);
+  final todaySubjects = ScheduleService.getSubjectsWithClassToday(subjects);
+  return todaySubjects.cast<Subject>();
 });
 
 // Today's attendance provider - shows attendance records for today

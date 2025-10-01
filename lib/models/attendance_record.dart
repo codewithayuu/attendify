@@ -90,6 +90,8 @@ enum AttendanceStatus {
   Late,
   @HiveField(3)
   Excused,
+  @HiveField(4)
+  Unmarked,
 }
 
 extension AttendanceStatusExtension on AttendanceStatus {
@@ -103,6 +105,8 @@ extension AttendanceStatusExtension on AttendanceStatus {
         return 'Late';
       case AttendanceStatus.Excused:
         return 'Excused';
+      case AttendanceStatus.Unmarked:
+        return 'Unmarked';
     }
   }
 
@@ -116,6 +120,8 @@ extension AttendanceStatusExtension on AttendanceStatus {
         return '⏰';
       case AttendanceStatus.Excused:
         return '📝';
+      case AttendanceStatus.Unmarked:
+        return '⭕';
     }
   }
 
@@ -126,6 +132,7 @@ extension AttendanceStatusExtension on AttendanceStatus {
         return true;
       case AttendanceStatus.Absent:
       case AttendanceStatus.Excused:
+      case AttendanceStatus.Unmarked:
         return false;
     }
   }

@@ -4,7 +4,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/subject.dart';
+import '../models/attendance_record.dart';
 import '../providers/subject_provider.dart' as subjects;
+import '../providers/attendance_provider.dart';
 import '../services/schedule_service.dart';
 import '../utils/app_theme.dart';
 
@@ -14,14 +16,16 @@ class AddSubjectScreenEnhanced extends ConsumerStatefulWidget {
   const AddSubjectScreenEnhanced({super.key, this.subject});
 
   @override
-  ConsumerState<AddSubjectScreenEnhanced> createState() => _AddSubjectScreenEnhancedState();
+  ConsumerState<AddSubjectScreenEnhanced> createState() =>
+      _AddSubjectScreenEnhancedState();
 }
 
-class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhanced> {
+class _AddSubjectScreenEnhancedState
+    extends ConsumerState<AddSubjectScreenEnhanced> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   // Schedule fields
   List<int> _selectedWeekdays = [];
   String _startTime = '09:00';
@@ -29,16 +33,30 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
   DateTime _semesterStart = DateTime.now();
   DateTime _semesterEnd = DateTime.now().add(const Duration(days: 90));
   String _selectedColor = '#2196F3';
-  
+
   bool _isLoading = false;
 
   final List<String> _colors = [
-    '#2196F3', '#4CAF50', '#FF9800', '#F44336', '#9C27B0',
-    '#00BCD4', '#FF5722', '#795548', '#607D8B', '#E91E63',
+    '#2196F3',
+    '#4CAF50',
+    '#FF9800',
+    '#F44336',
+    '#9C27B0',
+    '#00BCD4',
+    '#FF5722',
+    '#795548',
+    '#607D8B',
+    '#E91E63',
   ];
 
   final List<String> _weekdayNames = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
   ];
 
   @override
@@ -94,39 +112,39 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
                     // Basic Information Section
                     _buildSectionHeader('Basic Information'),
                     const SizedBox(height: 16),
-                    
+
                     _buildNameField(),
                     const SizedBox(height: 16),
-                    
+
                     _buildDescriptionField(),
                     const SizedBox(height: 16),
-                    
+
                     _buildColorSelector(),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Schedule Section
                     _buildSectionHeader('Schedule'),
                     const SizedBox(height: 16),
-                    
+
                     _buildWeekdaySelector(),
                     const SizedBox(height: 16),
-                    
+
                     _buildTimeSelector(),
                     const SizedBox(height: 16),
-                    
+
                     _buildSemesterDateSelector(),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Preview Section
                     _buildPreviewSection(),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Action Buttons
                     _buildActionButtons(),
-                    
+
                     const SizedBox(height: 100), // Bottom padding
                   ],
                 ),
@@ -139,9 +157,9 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
     return Text(
       title,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).primaryColor,
-      ),
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
+          ),
     ).animate().fadeIn(duration: 300.ms).slideX();
   }
 
@@ -190,8 +208,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
             Text(
               'Subject Color',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -248,8 +266,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
             Text(
               'Class Days',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -270,7 +288,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
                       }
                     });
                   },
-                  selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                  selectedColor:
+                      Theme.of(context).primaryColor.withOpacity(0.2),
                   checkmarkColor: Theme.of(context).primaryColor,
                 );
               }),
@@ -291,8 +310,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
             Text(
               'Class Time',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -334,8 +353,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
             Text(
               'Semester Period',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -343,7 +362,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
                 Expanded(
                   child: ListTile(
                     title: const Text('Start Date'),
-                    subtitle: Text('${_semesterStart.day}/${_semesterStart.month}/${_semesterStart.year}'),
+                    subtitle: Text(
+                        '${_semesterStart.day}/${_semesterStart.month}/${_semesterStart.year}'),
                     leading: const Icon(Icons.calendar_today),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _selectSemesterStart,
@@ -353,7 +373,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
                 Expanded(
                   child: ListTile(
                     title: const Text('End Date'),
-                    subtitle: Text('${_semesterEnd.day}/${_semesterEnd.month}/${_semesterEnd.year}'),
+                    subtitle: Text(
+                        '${_semesterEnd.day}/${_semesterEnd.month}/${_semesterEnd.year}'),
                     leading: const Icon(Icons.calendar_today),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _selectSemesterEnd,
@@ -368,10 +389,16 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
   }
 
   Widget _buildPreviewSection() {
+    // Create a temporary subject-like object for preview
+    final tempSubject = {
+      'weekdays': _selectedWeekdays,
+      'startTime': _startTime,
+    };
+
     final classDates = ScheduleService.generateClassDates(
+      tempSubject,
       _semesterStart,
       _semesterEnd,
-      _selectedWeekdays,
     );
 
     return Card(
@@ -383,8 +410,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
             Text(
               'Preview',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -403,10 +430,13 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _nameController.text.isEmpty ? 'Subject Name' : _nameController.text,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        _nameController.text.isEmpty
+                            ? 'Subject Name'
+                            : _nameController.text,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                       if (_selectedWeekdays.isNotEmpty)
                         Text(
@@ -420,9 +450,9 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
                       Text(
                         'Total Classes: ${classDates.length}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).primaryColor,
-                        ),
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).primaryColor,
+                            ),
                       ),
                     ],
                   ),
@@ -462,7 +492,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
     );
     if (time != null) {
       setState(() {
-        _startTime = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+        _startTime =
+            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
       });
     }
   }
@@ -474,7 +505,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
     );
     if (time != null) {
       setState(() {
-        _endTime = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+        _endTime =
+            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
       });
     }
   }
@@ -555,22 +587,27 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
     setState(() => _isLoading = true);
 
     try {
-      final classDates = ScheduleService.generateClassDates(
-        _semesterStart,
-        _semesterEnd,
-        _selectedWeekdays,
+      // Generate class dates using ScheduleService
+      final timeParts = _startTime.split(':');
+      final startTime = TimeOfDay(
+        hour: int.parse(timeParts[0]),
+        minute: int.parse(timeParts[1]),
       );
 
-      final attendanceRecords = ScheduleService.generateAttendanceRecords(
-        widget.subject?.id ?? const Uuid().v4(),
-        classDates,
+      final classDates = ScheduleService.generateOccurrences(
+        start: _semesterStart,
+        end: _semesterEnd,
+        weekdays: _selectedWeekdays,
+        startTime: startTime,
       );
+
+      final subjectId = widget.subject?.id ?? const Uuid().v4();
 
       final subject = Subject(
-        id: widget.subject?.id ?? const Uuid().v4(),
+        id: subjectId,
         name: _nameController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         colorHex: _selectedColor,
         weekdays: _selectedWeekdays,
@@ -579,21 +616,31 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
         semesterStart: _semesterStart,
         semesterEnd: _semesterEnd,
         totalClasses: classDates.length,
-        attendanceRecords: attendanceRecords,
+        recurringWeekly: true, // Default to true for now
+        requiredPercent: null, // Use global default
       );
 
       if (widget.subject != null) {
-        await ref.read(subjects.subjectListProvider.notifier).updateSubject(subject);
+        await ref
+            .read(subjects.subjectListProvider.notifier)
+            .updateSubject(subject);
       } else {
-        await ref.read(subjects.subjectListProvider.notifier).addSubject(subject);
+        await ref
+            .read(subjects.subjectListProvider.notifier)
+            .addSubject(subject);
+
+        // Generate attendance records for new recurring subjects
+        if (subject.recurringWeekly && classDates.isNotEmpty) {
+          await _generateAttendanceRecords(subjectId, classDates);
+        }
       }
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.subject != null 
-                ? 'Subject updated successfully!' 
+            content: Text(widget.subject != null
+                ? 'Subject updated successfully!'
                 : 'Subject created successfully!'),
             backgroundColor: Colors.green,
           ),
@@ -618,7 +665,8 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Subject'),
-        content: Text('Are you sure you want to delete "${widget.subject?.name}"? This will also delete all attendance records.'),
+        content: Text(
+            'Are you sure you want to delete "${widget.subject?.name}"? This will also delete all attendance records.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -643,8 +691,10 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(subjects.subjectListProvider.notifier).deleteSubject(widget.subject!.id);
-      
+      await ref
+          .read(subjects.subjectListProvider.notifier)
+          .deleteSubject(widget.subject!.id);
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -665,6 +715,44 @@ class _AddSubjectScreenEnhancedState extends ConsumerState<AddSubjectScreenEnhan
       }
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  /// Generate attendance records for a subject's scheduled classes
+  Future<void> _generateAttendanceRecords(
+      String subjectId, List<DateTime> classDates) async {
+    try {
+      final attendanceProvider = ref.read(attendanceRecordsProvider.notifier);
+
+      for (final classDate in classDates) {
+        final attendanceRecord = AttendanceRecord(
+          id: '${subjectId}_${classDate.millisecondsSinceEpoch}',
+          subjectId: subjectId,
+          date: classDate,
+          status: AttendanceStatus.Unmarked,
+        );
+
+        await attendanceProvider.addAttendanceRecord(attendanceRecord);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Generated ${classDates.length} attendance records'),
+            backgroundColor: Colors.blue,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error generating attendance records: $e'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     }
   }
 }

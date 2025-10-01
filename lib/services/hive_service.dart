@@ -185,6 +185,9 @@ class HiveService {
         case AttendanceStatus.Excused:
           stats['excused'] = stats['excused']! + 1;
           break;
+        case AttendanceStatus.Unmarked:
+          // Unmarked records don't count towards any category
+          break;
       }
     }
 

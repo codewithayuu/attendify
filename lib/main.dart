@@ -31,7 +31,7 @@ void main() async {
   // Initialize services
   await HiveService.init();
   print('✅ Hive Initialized Successfully (AttendanceAdapter registered)');
-  
+
   await NotificationService.initialize();
   print('✅ Notification Service Initialized Successfully');
 
