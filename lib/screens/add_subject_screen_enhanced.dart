@@ -7,6 +7,7 @@ import '../models/subject.dart';
 import '../models/attendance_record.dart';
 import '../providers/subject_provider.dart' as subjects;
 import '../providers/attendance_provider.dart';
+import '../providers/settings_provider.dart';
 import '../services/schedule_service.dart';
 import '../utils/app_theme.dart';
 
@@ -28,10 +29,9 @@ class _AddSubjectScreenEnhancedState
 
   // Schedule fields
   List<int> _selectedWeekdays = [];
-  String _startTime = '09:00';
-  String _endTime = '10:00';
-  DateTime _semesterStart = DateTime.now();
-  DateTime _semesterEnd = DateTime.now().add(const Duration(days: 90));
+  TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 10, minute: 0);
+  bool _recurringWeekly = true; // true = Regular weekly, false = One-time
   String _selectedColor = '#2196F3';
 
   bool _isLoading = false;
@@ -72,10 +72,21 @@ class _AddSubjectScreenEnhancedState
     _nameController.text = subject.name;
     _descriptionController.text = subject.description ?? '';
     _selectedWeekdays = List.from(subject.weekdays);
-    _startTime = subject.startTime;
-    _endTime = subject.endTime;
-    _semesterStart = subject.semesterStart;
-    _semesterEnd = subject.semesterEnd;
+
+    // Parse time strings to TimeOfDay
+    final startTimeParts = subject.startTime.split(':');
+    _startTime = TimeOfDay(
+      hour: int.parse(startTimeParts[0]),
+      minute: int.parse(startTimeParts[1]),
+    );
+
+    final endTimeParts = subject.endTime.split(':');
+    _endTime = TimeOfDay(
+      hour: int.parse(endTimeParts[0]),
+      minute: int.parse(endTimeParts[1]),
+    );
+
+    _recurringWeekly = subject.recurringWeekly;
     _selectedColor = subject.colorHex ?? '#2196F3';
   }
 
@@ -130,10 +141,10 @@ class _AddSubjectScreenEnhancedState
                     _buildWeekdaySelector(),
                     const SizedBox(height: 16),
 
-                    _buildTimeSelector(),
+                    _buildRecurrenceSelector(),
                     const SizedBox(height: 16),
 
-                    _buildSemesterDateSelector(),
+                    _buildTimeSelector(),
 
                     const SizedBox(height: 32),
 
@@ -300,6 +311,56 @@ class _AddSubjectScreenEnhancedState
     ).animate().fadeIn(duration: 300.ms, delay: 400.ms).slideX();
   }
 
+  Widget _buildRecurrenceSelector() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Recurrence',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<bool>(
+                    title: const Text('Regular weekly'),
+                    subtitle: const Text('Repeats every week'),
+                    value: true,
+                    groupValue: _recurringWeekly,
+                    onChanged: (value) {
+                      setState(() {
+                        _recurringWeekly = value!;
+                      });
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<bool>(
+                    title: const Text('One-time'),
+                    subtitle: const Text('Single occurrence'),
+                    value: false,
+                    groupValue: _recurringWeekly,
+                    onChanged: (value) {
+                      setState(() {
+                        _recurringWeekly = value!;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 300.ms, delay: 450.ms).slideX();
+  }
+
   Widget _buildTimeSelector() {
     return Card(
       child: Padding(
@@ -319,7 +380,7 @@ class _AddSubjectScreenEnhancedState
                 Expanded(
                   child: ListTile(
                     title: const Text('Start Time'),
-                    subtitle: Text(_startTime),
+                    subtitle: Text(_formatTimeOfDay(_startTime)),
                     leading: const Icon(Icons.schedule),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _selectStartTime,
@@ -329,7 +390,7 @@ class _AddSubjectScreenEnhancedState
                 Expanded(
                   child: ListTile(
                     title: const Text('End Time'),
-                    subtitle: Text(_endTime),
+                    subtitle: Text(_formatTimeOfDay(_endTime)),
                     leading: const Icon(Icons.schedule),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _selectEndTime,
@@ -343,62 +404,23 @@ class _AddSubjectScreenEnhancedState
     ).animate().fadeIn(duration: 300.ms, delay: 500.ms).slideX();
   }
 
-  Widget _buildSemesterDateSelector() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Semester Period',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ListTile(
-                    title: const Text('Start Date'),
-                    subtitle: Text(
-                        '${_semesterStart.day}/${_semesterStart.month}/${_semesterStart.year}'),
-                    leading: const Icon(Icons.calendar_today),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: _selectSemesterStart,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ListTile(
-                    title: const Text('End Date'),
-                    subtitle: Text(
-                        '${_semesterEnd.day}/${_semesterEnd.month}/${_semesterEnd.year}'),
-                    leading: const Icon(Icons.calendar_today),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: _selectSemesterEnd,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 300.ms, delay: 600.ms).slideX();
-  }
-
   Widget _buildPreviewSection() {
+    // Get semester dates from settings for preview
+    final settings = ref.watch(settingsProvider);
+    final semesterStart = settings.semesterStart ?? DateTime.now();
+    final semesterEnd =
+        settings.semesterEnd ?? DateTime.now().add(const Duration(days: 90));
+
     // Create a temporary subject-like object for preview
     final tempSubject = {
       'weekdays': _selectedWeekdays,
-      'startTime': _startTime,
+      'startTime': _formatTimeOfDay(_startTime),
     };
 
     final classDates = ScheduleService.generateClassDates(
       tempSubject,
-      _semesterStart,
-      _semesterEnd,
+      semesterStart,
+      semesterEnd,
     );
 
     return Card(
@@ -488,12 +510,11 @@ class _AddSubjectScreenEnhancedState
   void _selectStartTime() async {
     final time = await showTimePicker(
       context: context,
-      initialTime: _parseTimeString(_startTime),
+      initialTime: _startTime,
     );
     if (time != null) {
       setState(() {
-        _startTime =
-            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+        _startTime = time;
       });
     }
   }
@@ -501,53 +522,17 @@ class _AddSubjectScreenEnhancedState
   void _selectEndTime() async {
     final time = await showTimePicker(
       context: context,
-      initialTime: _parseTimeString(_endTime),
+      initialTime: _endTime,
     );
     if (time != null) {
       setState(() {
-        _endTime =
-            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+        _endTime = time;
       });
     }
   }
 
-  void _selectSemesterStart() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _semesterStart,
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (date != null) {
-      setState(() {
-        _semesterStart = date;
-        if (_semesterEnd.isBefore(_semesterStart)) {
-          _semesterEnd = _semesterStart.add(const Duration(days: 90));
-        }
-      });
-    }
-  }
-
-  void _selectSemesterEnd() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _semesterEnd,
-      firstDate: _semesterStart,
-      lastDate: DateTime.now().add(const Duration(days: 500)),
-    );
-    if (date != null) {
-      setState(() {
-        _semesterEnd = date;
-      });
-    }
-  }
-
-  TimeOfDay _parseTimeString(String timeString) {
-    final parts = timeString.split(':');
-    return TimeOfDay(
-      hour: int.parse(parts[0]),
-      minute: int.parse(parts[1]),
-    );
+  String _formatTimeOfDay(TimeOfDay time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
   Color _parseColor(String colorString) {
@@ -565,13 +550,19 @@ class _AddSubjectScreenEnhancedState
   void _saveSubject() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Get semester dates from settings
+    final settings = ref.read(settingsProvider);
+    final semesterStart = settings.semesterStart ?? DateTime.now();
+    final semesterEnd =
+        settings.semesterEnd ?? DateTime.now().add(const Duration(days: 90));
+
     // Validate schedule
     final errors = ScheduleService.validateSchedule(
       weekdays: _selectedWeekdays,
-      startTime: _startTime,
-      endTime: _endTime,
-      semesterStart: _semesterStart,
-      semesterEnd: _semesterEnd,
+      startTime: _formatTimeOfDay(_startTime),
+      endTime: _formatTimeOfDay(_endTime),
+      semesterStart: semesterStart,
+      semesterEnd: semesterEnd,
     );
 
     if (errors.isNotEmpty) {
@@ -588,17 +579,11 @@ class _AddSubjectScreenEnhancedState
 
     try {
       // Generate class dates using ScheduleService
-      final timeParts = _startTime.split(':');
-      final startTime = TimeOfDay(
-        hour: int.parse(timeParts[0]),
-        minute: int.parse(timeParts[1]),
-      );
-
       final classDates = ScheduleService.generateOccurrences(
-        start: _semesterStart,
-        end: _semesterEnd,
+        start: semesterStart,
+        end: semesterEnd,
         weekdays: _selectedWeekdays,
-        startTime: startTime,
+        startTime: _startTime,
       );
 
       final subjectId = widget.subject?.id ?? const Uuid().v4();
@@ -611,12 +596,12 @@ class _AddSubjectScreenEnhancedState
             : _descriptionController.text.trim(),
         colorHex: _selectedColor,
         weekdays: _selectedWeekdays,
-        startTime: _startTime,
-        endTime: _endTime,
-        semesterStart: _semesterStart,
-        semesterEnd: _semesterEnd,
+        startTime: _formatTimeOfDay(_startTime),
+        endTime: _formatTimeOfDay(_endTime),
+        semesterStart: semesterStart,
+        semesterEnd: semesterEnd,
         totalClasses: classDates.length,
-        recurringWeekly: true, // Default to true for now
+        recurringWeekly: _recurringWeekly,
         requiredPercent: null, // Use global default
       );
 
