@@ -73,6 +73,12 @@ class DefaultSubjectsService {
           colorHex: subjectData['colorHex'],
           totalClasses: 0,
           attendedClasses: 0,
+          // Add new required fields with proper defaults
+          weekdays: [1, 3, 5], // Monday, Wednesday, Friday
+          startTime: '09:00',
+          endTime: '10:00',
+          recurringWeekly: true,
+          requiredPercent: null, // Use global default
         );
         
         await HiveService.addSubject(subject);
@@ -105,6 +111,12 @@ class DefaultSubjectsService {
       colorHex: subjectData['colorHex'],
       totalClasses: 0,
       attendedClasses: 0,
+      // Add new required fields with proper defaults
+      weekdays: [1, 3, 5], // Monday, Wednesday, Friday
+      startTime: '09:00',
+      endTime: '10:00',
+      recurringWeekly: true,
+      requiredPercent: null, // Use global default
     );
     
     await HiveService.addSubject(subject);

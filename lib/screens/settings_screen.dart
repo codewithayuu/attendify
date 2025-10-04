@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/settings_provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/app_theme.dart';
+import '../services/hive_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -149,6 +151,14 @@ class SettingsScreen extends ConsumerWidget {
             .animate()
             .fadeIn(duration: 300.ms, delay: 1800.ms)
             .slideX(),
+
+        // Debug section (only in debug mode)
+        if (kDebugMode) ...[
+          _buildDebugSection(context)
+              .animate()
+              .fadeIn(duration: 300.ms, delay: 1900.ms)
+              .slideX(),
+        ],
 
         const SizedBox(height: 100), // Bottom padding
       ],
@@ -727,6 +737,66 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // Debug section for clearing data
+  Widget _buildDebugSection(BuildContext context) {
+    return Column(
+      children: [
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.bug_report, color: Colors.orange),
+          title: const Text('Debug Tools'),
+          subtitle: const Text('Development utilities'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.clear_all),
+          title: const Text('Clear Subjects Box'),
+          subtitle: const Text('Fix Map vs Subject issues'),
+          onTap: () async {
+            await HiveService.clearSubjectsBox();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Subjects box cleared and recreated')),
+              );
+            }
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.delete_forever, color: Colors.red),
+          title: const Text('Clear All Data'),
+          subtitle: const Text('⚠️ This will delete all your data'),
+          onTap: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Clear All Data'),
+                content: const Text('This will permanently delete all subjects, attendance records, and settings. Are you sure?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Clear All', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+            );
+            
+            if (confirmed == true) {
+              await HiveService.forceClearAllData();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('All data cleared')),
+                );
+              }
+            }
+          },
+        ),
+      ],
     );
   }
 }

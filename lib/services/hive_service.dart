@@ -15,16 +15,35 @@ class HiveService {
   static Box<AttendanceRecord>? _attendanceBox;
   static Box<AppSettings>? _settingsBox;
 
+  // Getters for accessing boxes
+  static Box<Subject> get subjectsBox => _subjectsBox!;
+  static Box<AttendanceRecord> get attendanceBox => _attendanceBox!;
+  static Box<AppSettings> get settingsBox => _settingsBox!;
+
   // Initialize Hive
   static Future<void> init() async {
     await Hive.initFlutter();
 
-    // Register adapters
-    Hive.registerAdapter(SubjectAdapter());
-    Hive.registerAdapter(AttendanceRecordAdapter());
-    Hive.registerAdapter(AttendanceAdapter());
-    Hive.registerAdapter(AttendanceStatusAdapter());
-    Hive.registerAdapter(AppSettingsAdapter());
+    // Register adapters with proper guards
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(SubjectAdapter());
+    }
+
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(AttendanceAdapter());
+    }
+
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(AppSettingsAdapter());
+    }
+
+    if (!Hive.isAdapterRegistered(4)) {
+      Hive.registerAdapter(AttendanceRecordAdapter());
+    }
+
+    if (!Hive.isAdapterRegistered(5)) {
+      Hive.registerAdapter(AttendanceStatusAdapter());
+    }
 
     // Open boxes
     _subjectsBox = await Hive.openBox<Subject>(_subjectsBoxName);
@@ -39,6 +58,11 @@ class HiveService {
 
     // Initialize default subjects if none exist
     await DefaultSubjectsService.initializeDefaultSubjects();
+
+    // Force reinitialize subjects with proper fields if they don't have weekdays
+    await _ensureSubjectsHaveRequiredFields();
+
+    // Data is now stored correctly as Subject objects
   }
 
   // Initialize default settings
@@ -394,5 +418,63 @@ class HiveService {
     await _subjectsBox!.clear();
     await _attendanceBox!.clear();
     await _settingsBox!.clear();
+  }
+
+  // Clear subjects only and reinitialize with proper defaults
+  static Future<void> clearSubjectsAndReinitialize() async {
+    await _subjectsBox!.clear();
+    await DefaultSubjectsService.initializeDefaultSubjects();
+  }
+
+  // Ensure all subjects have the required new fields
+  static Future<void> _ensureSubjectsHaveRequiredFields() async {
+    final subjects = _subjectsBox!.values.toList();
+    bool needsUpdate = false;
+
+    for (final subject in subjects) {
+      // Check if subject is missing required fields
+      if (subject.weekdays.isEmpty ||
+          subject.startTime == '09:00' && subject.endTime == '10:00') {
+        needsUpdate = true;
+        break;
+      }
+    }
+
+    if (needsUpdate) {
+      print('🔄 Updating subjects with required fields...');
+      await _subjectsBox!.clear();
+      await DefaultSubjectsService.initializeDefaultSubjects();
+      print('✅ Subjects updated with required fields');
+    }
+  }
+
+  // Force clear all subjects and recreate with proper fields
+  static Future<void> forceRecreateSubjects() async {
+    print('🧹 Force clearing all subjects...');
+    await _subjectsBox!.clear();
+    await DefaultSubjectsService.initializeDefaultSubjects();
+    print('✅ Subjects recreated with proper fields');
+  }
+
+  // Force clear ALL data and recreate everything
+  static Future<void> forceClearAllData() async {
+    print('🧹 Force clearing ALL Hive data...');
+    await _subjectsBox!.clear();
+    await _attendanceBox!.clear();
+    await _settingsBox!.clear();
+
+    // Recreate everything from scratch
+    await DefaultSubjectsService.initializeDefaultSubjects();
+    await _initializeDefaultSettings();
+
+    print('✅ All data cleared and recreated');
+  }
+
+  // Clear only subjects box (for debugging Map vs Subject issues)
+  static Future<void> clearSubjectsBox() async {
+    print('🧹 Clearing subjects box to remove old Map data...');
+    await _subjectsBox!.clear();
+    await DefaultSubjectsService.initializeDefaultSubjects();
+    print('✅ Subjects box cleared and recreated with proper Subject objects');
   }
 }

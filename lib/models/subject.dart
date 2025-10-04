@@ -87,6 +87,62 @@ class Subject extends HiveObject {
     return (presentCount / attendanceRecords.length) * 100;
   }
 
+  // Factory method to convert from Map (for compatibility)
+  factory Subject.fromMap(Map<String, dynamic> map) {
+    return Subject(
+      id: map['id'] ?? const Uuid().v4(),
+      name: map['name'] ?? '',
+      totalClasses: map['totalClasses'] ?? 0,
+      attendedClasses: map['attendedClasses'] ?? 0,
+      description: map['description'],
+      createdAt: map['createdAt'] != null 
+          ? DateTime.parse(map['createdAt'].toString())
+          : DateTime.now(),
+      updatedAt: map['updatedAt'] != null 
+          ? DateTime.parse(map['updatedAt'].toString())
+          : DateTime.now(),
+      colorHex: map['colorHex'],
+      weekdays: map['weekdays'] != null 
+          ? List<int>.from(map['weekdays'])
+          : <int>[],
+      startTime: map['startTime'] ?? '09:00',
+      endTime: map['endTime'] ?? '10:00',
+      semesterStart: map['semesterStart'] != null 
+          ? DateTime.parse(map['semesterStart'].toString())
+          : DateTime.now(),
+      semesterEnd: map['semesterEnd'] != null 
+          ? DateTime.parse(map['semesterEnd'].toString())
+          : DateTime.now().add(const Duration(days: 90)),
+      attendanceRecords: map['attendanceRecords'] != null 
+          ? List<Attendance>.from(map['attendanceRecords'])
+          : <Attendance>[],
+      recurringWeekly: map['recurringWeekly'] ?? true,
+      requiredPercent: map['requiredPercent'],
+    );
+  }
+
+  // Convert to Map (for compatibility)
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'totalClasses': totalClasses,
+      'attendedClasses': attendedClasses,
+      'description': description,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'colorHex': colorHex,
+      'weekdays': weekdays,
+      'startTime': startTime,
+      'endTime': endTime,
+      'semesterStart': semesterStart.toIso8601String(),
+      'semesterEnd': semesterEnd.toIso8601String(),
+      'attendanceRecords': attendanceRecords.map((a) => a.toMap()).toList(),
+      'recurringWeekly': recurringWeekly,
+      'requiredPercent': requiredPercent,
+    };
+  }
+
   // Get total classes from attendance records
   int get totalClassesFromRecords => attendanceRecords.length;
 

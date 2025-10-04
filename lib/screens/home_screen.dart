@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/subject_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../models/attendance_record.dart';
+import '../models/subject.dart';
 import '../services/notification_service.dart';
 import '../widgets/subject_card_enhanced.dart';
 import 'today_classes_screen.dart';
@@ -229,7 +230,7 @@ class DashboardTab extends ConsumerWidget {
                     (context, index) {
                       final subject = subjects[index];
                       return ProviderScope(
-                        overrides: [
+                        overrides: const [
                           // Override providers for this specific card to avoid global rebuilds
                         ],
                         child: SubjectCardEnhanced(

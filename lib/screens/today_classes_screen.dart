@@ -19,8 +19,8 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
   @override
   Widget build(BuildContext context) {
     final allSubjects = ref.watch(subjects.subjectListProvider);
-    final todayClasses =
-        ScheduleService.getClassesOnDate(allSubjects, DateTime.now());
+    final now = DateTime.now();
+    final todayClasses = ScheduleService.getClassesOnDate(allSubjects, now);
     final todayAttendance = ref.watch(todayAttendanceProvider);
 
     return Scaffold(
@@ -37,7 +37,7 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
         ],
       ),
       body: todayClasses.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(allSubjects)
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -66,11 +66,18 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
+  Widget _buildEmptyState(List<Subject> allSubjects) {
+    // Show upcoming classes preview to avoid a blank screen on off-days
+    final upcoming =
+        ScheduleService.getUpcomingClasses(allSubjects, daysAhead: 7);
+    final upcomingPreview = upcoming.take(3).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          const SizedBox(height: 48),
           Icon(
             Icons.event_available,
             size: 64,
@@ -96,6 +103,28 @@ class _TodayClassesScreenState extends ConsumerState<TodayClassesScreen> {
             icon: const Icon(Icons.add),
             label: const Text('Add Subject'),
           ),
+          if (upcomingPreview.isNotEmpty) ...[
+            const SizedBox(height: 32),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Upcoming',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...upcomingPreview.map((c) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.schedule),
+                    title: Text(c['subjectName'] as String),
+                    subtitle: Text(
+                        '${c['dayName']} at ${(c['time'] as TimeOfDay).hour.toString().padLeft(2, '0')}:${(c['time'] as TimeOfDay).minute.toString().padLeft(2, '0')}'),
+                  ),
+                )),
+          ],
+          const SizedBox(height: 48),
         ],
       ),
     );

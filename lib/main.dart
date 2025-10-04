@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'services/hive_service.dart';
 import 'services/notification_service.dart';
@@ -32,6 +33,8 @@ void main() async {
   // Initialize services
   await HiveService.init();
   print('✅ Hive Initialized Successfully (AttendanceAdapter registered)');
+  
+  // Initialization complete
 
   await NotificationService.initialize();
   print('✅ Notification Service Initialized Successfully');

@@ -31,6 +31,9 @@ class NotificationService {
         InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
+      linux: LinuxInitializationSettings(
+        defaultActionName: 'Open notification',
+      ),
     );
 
     await _notifications.initialize(initializationSettings);
@@ -76,17 +79,18 @@ class NotificationService {
     final hour = int.parse(timeParts[0]);
     final minute = int.parse(timeParts[1]);
 
-    await _notifications.zonedSchedule(
-      1,
-      'Attendance Reminder',
-      'Don\'t forget to mark your attendance today!',
-      _nextInstanceOfTime(hour, minute),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: _channelDescription,
-          importance: Importance.high,
+    try {
+      await _notifications.zonedSchedule(
+        1,
+        'Attendance Reminder',
+        'Don\'t forget to mark your attendance today!',
+        _nextInstanceOfTime(hour, minute),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelId,
+            _channelName,
+            channelDescription: _channelDescription,
+            importance: Importance.high,
           priority: Priority.high,
           playSound: true,
           enableVibration: true,
@@ -97,6 +101,36 @@ class NotificationService {
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
+    } catch (e) {
+      print('⚠️ Failed to schedule notification (exact alarms not permitted): $e');
+      // Fallback to inexact scheduling
+      try {
+        await _notifications.zonedSchedule(
+          1,
+          'Attendance Reminder',
+          'Don\'t forget to mark your attendance today!',
+          _nextInstanceOfTime(hour, minute),
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              _channelId,
+              _channelName,
+              channelDescription: _channelDescription,
+              importance: Importance.high,
+              priority: Priority.high,
+              playSound: true,
+              enableVibration: true,
+            ),
+          ),
+          androidScheduleMode: AndroidScheduleMode.inexact,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+        );
+        print('✅ Notification scheduled with inexact mode');
+      } catch (fallbackError) {
+        print('❌ Failed to schedule notification even with fallback: $fallbackError');
+      }
+    }
   }
 
   // Cancel daily reminder

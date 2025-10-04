@@ -69,22 +69,47 @@ class _AddSubjectScreenEnhancedState
 
   void _loadSubjectData() {
     final subject = widget.subject!;
+
+    // Validate that subject is actually a Subject object
+    if (subject is! Subject) {
+      print('❌ Error: subject is not a Subject object: ${subject.runtimeType}');
+      // Use default values if subject is not a proper Subject object
+      _nameController.text = 'Unknown Subject';
+      _descriptionController.text = '';
+      _selectedWeekdays = [1, 3, 5]; // Default weekdays
+      _startTime = const TimeOfDay(hour: 9, minute: 0);
+      _endTime = const TimeOfDay(hour: 10, minute: 0);
+      _recurringWeekly = true;
+      _selectedColor = '#2196F3';
+      return;
+    }
+
     _nameController.text = subject.name;
     _descriptionController.text = subject.description ?? '';
     _selectedWeekdays = List.from(subject.weekdays);
 
-    // Parse time strings to TimeOfDay
-    final startTimeParts = subject.startTime.split(':');
-    _startTime = TimeOfDay(
-      hour: int.parse(startTimeParts[0]),
-      minute: int.parse(startTimeParts[1]),
-    );
+    // Parse time strings to TimeOfDay with error handling
+    try {
+      final startTimeParts = subject.startTime.split(':');
+      _startTime = TimeOfDay(
+        hour: int.parse(startTimeParts[0]),
+        minute: int.parse(startTimeParts[1]),
+      );
+    } catch (e) {
+      print('❌ Error parsing startTime: $e');
+      _startTime = const TimeOfDay(hour: 9, minute: 0);
+    }
 
-    final endTimeParts = subject.endTime.split(':');
-    _endTime = TimeOfDay(
-      hour: int.parse(endTimeParts[0]),
-      minute: int.parse(endTimeParts[1]),
-    );
+    try {
+      final endTimeParts = subject.endTime.split(':');
+      _endTime = TimeOfDay(
+        hour: int.parse(endTimeParts[0]),
+        minute: int.parse(endTimeParts[1]),
+      );
+    } catch (e) {
+      print('❌ Error parsing endTime: $e');
+      _endTime = const TimeOfDay(hour: 10, minute: 0);
+    }
 
     _recurringWeekly = subject.recurringWeekly;
     _selectedColor = subject.colorHex ?? '#2196F3';
@@ -578,6 +603,20 @@ class _AddSubjectScreenEnhancedState
     setState(() => _isLoading = true);
 
     try {
+      // Require at least one weekday
+      if (_selectedWeekdays.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please select at least one class day'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
+      }
+
       // Generate class dates using ScheduleService
       final classDates = ScheduleService.generateOccurrences(
         start: semesterStart,

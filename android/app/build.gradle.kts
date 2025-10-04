@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.attendance_tracker"
+    namespace = "com.attendify.iambatman"
     compileSdk = 36  // highest required by plugins
     ndkVersion = "27.0.12077973"
 
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.attendance_tracker"
+        applicationId = "com.attendify.iambatman"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 30  // Android 11 (API 30)

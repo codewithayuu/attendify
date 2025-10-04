@@ -40,13 +40,15 @@ class AttendanceChart extends StatelessWidget {
               height: 240,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: PieChart(
-                  PieChartData(
-                    sections: _buildSections(),
-                    centerSpaceRadius: 60,
-                    sectionsSpace: 2,
-                  ),
-                ),
+                child: _buildSections().isEmpty
+                    ? const Center(child: Text('No data to chart'))
+                    : PieChart(
+                        PieChartData(
+                          sections: _buildSections(),
+                          centerSpaceRadius: 60,
+                          sectionsSpace: 2,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 16),

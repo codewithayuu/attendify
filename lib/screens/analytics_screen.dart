@@ -69,124 +69,89 @@ class AnalyticsScreen extends ConsumerWidget {
                     .read(attendanceRecordsProvider.notifier)
                     .loadAttendanceRecords();
               },
-              child: Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Overall stats card
-                      _buildOverallStatsCard(context, overallStats)
-                          .animate()
-                          .fadeIn(duration: 300.ms)
-                          .slideY(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Overall stats card
+                    _buildOverallStatsCard(context, overallStats),
 
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                      // Subject-wise attendance chart
-                      Text(
-                        'Subject-wise Attendance',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 100.ms)
-                          .slideX(),
+                    // Subject-wise attendance chart
+                    Text(
+                      'Subject-wise Attendance',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
 
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                      AttendanceChart(subjects: subjects)
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 200.ms)
-                          .slideY(),
+                    AttendanceChart(subjects: subjects),
 
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                      // Weekly stats
-                      Text(
-                        'This Week',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 300.ms)
-                          .slideX(),
+                    // Weekly stats
+                    Text(
+                      'This Week',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
 
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                      _buildWeeklyStatsCard(context, weeklyStats)
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 400.ms)
-                          .slideY(),
+                    _buildWeeklyStatsCard(context, weeklyStats),
 
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                      // Monthly stats
-                      Text(
-                        'This Month',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 500.ms)
-                          .slideX(),
+                    // Monthly stats
+                    Text(
+                      'This Month',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
 
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                      _buildMonthlyStatsCard(context, monthlyStats)
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 600.ms)
-                          .slideY(),
+                    _buildMonthlyStatsCard(context, monthlyStats),
 
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                      // Attendance trend
-                      Text(
-                        '30-Day Trend',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 700.ms)
-                          .slideX(),
+                    // Attendance trend
+                    Text(
+                      '30-Day Trend',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
 
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                      AttendanceTrendChart(trendData: attendanceTrend)
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 800.ms)
-                          .slideY(),
+                    AttendanceTrendChart(trendData: attendanceTrend),
 
-                      const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                      // Detailed subject breakdown
-                      Text(
-                        'Subject Breakdown',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms, delay: 900.ms)
-                          .slideX(),
+                    // Detailed subject breakdown
+                    Text(
+                      'Subject Breakdown',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
 
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                      ...subjects
-                          .map((subject) =>
-                              _buildSubjectBreakdownCard(context, subject))
-                          .toList()
-                          .animate(interval: 100.ms)
-                          .fadeIn(duration: 300.ms, delay: 1000.ms)
-                          .slideY(),
+                    ...subjects
+                        .map((subject) =>
+                            _buildSubjectBreakdownCard(context, subject))
+                        .toList(),
 
-                      const SizedBox(height: 100), // Bottom padding
-                    ],
-                  ),
+                    const SizedBox(height: 100), // Bottom padding
+                  ],
                 ),
               ),
             ),
@@ -213,39 +178,33 @@ class AnalyticsScreen extends ConsumerWidget {
                   ),
             ),
             const SizedBox(height: 16),
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
               children: [
-                Expanded(
-                  child: _buildStatItem(
-                    context,
-                    'Subjects',
-                    stats['totalSubjects'].toString(),
-                    Icons.school,
-                  ),
+                _buildStatItem(
+                  context,
+                  'Subjects',
+                  stats['totalSubjects'].toString(),
+                  Icons.school,
                 ),
-                Expanded(
-                  child: _buildStatItem(
-                    context,
-                    'Total Classes',
-                    stats['totalClasses'].toString(),
-                    Icons.event,
-                  ),
+                _buildStatItem(
+                  context,
+                  'Total Classes',
+                  stats['totalClasses'].toString(),
+                  Icons.event,
                 ),
-                Expanded(
-                  child: _buildStatItem(
-                    context,
-                    'Attended',
-                    stats['attendedClasses'].toString(),
-                    Icons.check_circle,
-                  ),
+                _buildStatItem(
+                  context,
+                  'Attended',
+                  stats['attendedClasses'].toString(),
+                  Icons.check_circle,
                 ),
-                Expanded(
-                  child: _buildStatItem(
-                    context,
-                    'Percentage',
-                    '${stats['percentage'].toStringAsFixed(1)}%',
-                    Icons.percent,
-                  ),
+                _buildStatItem(
+                  context,
+                  'Percentage',
+                  '${stats['percentage'].toStringAsFixed(1)}%',
+                  Icons.percent,
                 ),
               ],
             ),
@@ -258,6 +217,7 @@ class AnalyticsScreen extends ConsumerWidget {
   Widget _buildStatItem(
       BuildContext context, String label, String value, IconData icon) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
@@ -272,13 +232,20 @@ class AnalyticsScreen extends ConsumerWidget {
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
+        const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
             color: Colors.white.withOpacity(0.8),
             fontSize: 12,
           ),
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
         ),
       ],
     );
@@ -492,30 +459,28 @@ class AnalyticsScreen extends ConsumerWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Flexible(
-                        child: Text(
-                          subject.name,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      Text(
+                        subject.name,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      Flexible(
-                        child: Text(
-                          '${subject.attendedClasses}/${subject.totalClasses} classes',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.color
-                                        ?.withOpacity(0.7),
-                                  ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      Text(
+                        '${subject.attendedClasses}/${subject.totalClasses} classes',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.color
+                                  ?.withOpacity(0.7),
+                            ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ],
                   ),

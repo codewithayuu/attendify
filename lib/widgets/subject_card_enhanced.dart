@@ -68,10 +68,9 @@ class _SubjectCardEnhancedState extends ConsumerState<SubjectCardEnhanced> {
     if (!mounted) return;
 
     try {
-      // Use Future.microtask to move computation off main thread
-      final stats = await Future.microtask(() => _calculateAttendanceStats());
-      final attendance = await Future.microtask(
-          () => ScheduleService.getAttendanceForToday(widget.subject));
+      // Calculate stats directly without Future.microtask to avoid type issues
+      final stats = _calculateAttendanceStats();
+      final attendance = ScheduleService.getAttendanceForToday(widget.subject);
 
       if (mounted) {
         setState(() {
@@ -81,6 +80,7 @@ class _SubjectCardEnhancedState extends ConsumerState<SubjectCardEnhanced> {
         });
       }
     } catch (e) {
+      print('❌ Error in _loadDataAsync: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -91,47 +91,84 @@ class _SubjectCardEnhancedState extends ConsumerState<SubjectCardEnhanced> {
 
   // Calculate attendance stats using the new AttendanceService
   Map<String, dynamic> _calculateAttendanceStats() {
-    // Get settings for default required percentage
-    final settings = ref.read(settingsProvider);
+    try {
+      // Validate that widget.subject is actually a Subject object
+      if (widget.subject is! Subject) {
+        print('❌ Error: widget.subject is not a Subject object: ${widget.subject.runtimeType}');
+        return _getDefaultStats();
+      }
 
-    // Get all attendance records for this subject
-    final attendanceRecords = ref.read(attendanceRecordsProvider);
-    final subjectRecords = attendanceRecords
-        .where(
-          (record) => record.subjectId == widget.subject.id,
-        )
-        .toList();
+      // Get settings for default required percentage
+      final settings = ref.read(settingsProvider);
 
-    // Count present records
-    final attendedClasses = subjectRecords
-        .where(
-          (record) =>
-              record.status == AttendanceStatus.Present ||
-              record.status == AttendanceStatus.Late,
-        )
-        .length;
+      // Get all attendance records for this subject
+      final attendanceRecords = ref.read(attendanceRecordsProvider);
+      final subjectRecords = attendanceRecords
+          .where(
+            (record) => record.subjectId == widget.subject.id,
+          )
+          .toList();
 
-    // Calculate total classes from schedule until semester end
-    final semesterEnd =
-        settings.semesterEnd ?? DateTime.now().add(const Duration(days: 90));
-    final classDates = ScheduleService.generateOccurrences(
-      start: DateTime.now(),
-      end: semesterEnd,
-      weekdays: widget.subject.weekdays,
-      startTime: _parseTimeOfDay(widget.subject.startTime),
-    );
-    final totalClasses = classDates.length;
+      // Count present records
+      final attendedClasses = subjectRecords
+          .where(
+            (record) =>
+                record.status == AttendanceStatus.Present ||
+                record.status == AttendanceStatus.Late,
+          )
+          .length;
 
-    // Use AttendanceService for calculations
-    final attendanceStats =
-        AttendanceService.getAttendanceStats(widget.subject, settings);
+      // Calculate total classes from schedule until semester end
+      final semesterEnd =
+          settings.semesterEnd ?? DateTime.now().add(const Duration(days: 90));
+      
+      // Safely access subject properties with null checks and type validation
+      final weekdays = widget.subject.weekdays;
+      final startTimeString = widget.subject.startTime;
+      
+      // Additional validation to ensure we have valid data
+      if (weekdays.isEmpty) {
+        print('⚠️ Warning: Subject ${widget.subject.name} has no weekdays set');
+        return _getDefaultStats();
+      }
+      
+      final classDates = ScheduleService.generateOccurrences(
+        start: DateTime.now(),
+        end: semesterEnd,
+        weekdays: weekdays,
+        startTime: _parseTimeOfDay(startTimeString),
+      );
+      final totalClasses = classDates.length;
 
-    // Add our calculated values
-    attendanceStats['totalClasses'] = totalClasses;
-    attendanceStats['attendedClasses'] = attendedClasses;
-    attendanceStats['classDates'] = classDates;
+      // Use AttendanceService for calculations
+      final attendanceStats =
+          AttendanceService.getAttendanceStats(widget.subject, settings);
 
-    return attendanceStats;
+      // Add our calculated values
+      attendanceStats['totalClasses'] = totalClasses;
+      attendanceStats['attendedClasses'] = attendedClasses;
+      attendanceStats['classDates'] = classDates;
+
+      return attendanceStats;
+    } catch (e) {
+      print('❌ Error calculating attendance stats: $e');
+      print('❌ Subject type: ${widget.subject.runtimeType}');
+      print('❌ Subject data: ${widget.subject.toString()}');
+      return _getDefaultStats();
+    }
+  }
+
+  // Get default stats when calculation fails
+  Map<String, dynamic> _getDefaultStats() {
+    return {
+      'currentPercentage': 0.0,
+      'totalClasses': 0,
+      'attendedClasses': 0,
+      'requiredPercentage': 75.0,
+      'classesNeeded': 0,
+      'isOnTrack': false,
+      'classDates': <DateTime>[],
+    };
   }
 
   // Parse time string to TimeOfDay
@@ -145,6 +182,17 @@ class _SubjectCardEnhancedState extends ConsumerState<SubjectCardEnhanced> {
 
   @override
   Widget build(BuildContext context) {
+    // Safety check: ensure subject is actually a Subject object
+    if (widget.subject is! Subject) {
+      return Card(
+        child: ListTile(
+          leading: const Icon(Icons.error, color: Colors.red),
+          title: Text('Error: Invalid subject data'),
+          subtitle: Text('Type: ${widget.subject.runtimeType}'),
+        ),
+      );
+    }
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -555,14 +603,18 @@ class _SubjectCardEnhancedState extends ConsumerState<SubjectCardEnhanced> {
             color: canMeetRequirement ? Colors.blue : Colors.red,
           ),
           const SizedBox(width: 4),
-          Text(
-            canMeetRequirement
-                ? 'Attend $classesNeeded of $remainingClasses remaining to reach ${requiredPercentage.toInt()}%'
-                : 'Need $classesNeeded more classes (only $remainingClasses remaining)',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: canMeetRequirement ? Colors.blue : Colors.red,
-                  fontWeight: FontWeight.w500,
-                ),
+          Flexible(
+            child: Text(
+              canMeetRequirement
+                  ? 'Attend $classesNeeded of $remainingClasses remaining to reach ${requiredPercentage.toInt()}%'
+                  : 'Need $classesNeeded more classes (only $remainingClasses remaining)',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: canMeetRequirement ? Colors.blue : Colors.red,
+                    fontWeight: FontWeight.w500,
+                  ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
           ),
         ],
       ),

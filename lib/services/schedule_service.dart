@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/subject.dart';
 
 class ScheduleService {
   /// Generates a list of DateTime occurrences for a given schedule
@@ -36,23 +37,47 @@ class ScheduleService {
   /// [start] - Start date for generation
   /// [end] - End date for generation
   static List<DateTime> generateSubjectOccurrences({
-    required dynamic subject, // Subject model
+    required dynamic subject, // Accepts Subject or Map for flexibility
     required DateTime start,
     required DateTime end,
   }) {
-    // Parse start time from subject
-    final timeParts = subject.startTime.split(':');
-    final startTime = TimeOfDay(
-      hour: int.parse(timeParts[0]),
-      minute: int.parse(timeParts[1]),
-    );
+    try {
+      String startTimeString = '09:00';
+      List<int> weekdays = const [];
 
-    return generateOccurrences(
-      start: start,
-      end: end,
-      weekdays: subject.weekdays,
-      startTime: startTime,
-    );
+      if (subject is Subject) {
+        startTimeString = subject.startTime;
+        weekdays = subject.weekdays;
+      } else if (subject is Map) {
+        startTimeString = (subject['startTime'] ?? '09:00').toString();
+        final rawWeekdays = subject['weekdays'];
+        if (rawWeekdays is List<int>) {
+          weekdays = rawWeekdays;
+        } else if (rawWeekdays is List) {
+          weekdays = rawWeekdays
+              .map((e) => int.tryParse(e.toString()) ?? 0)
+              .where((e) => e >= 1 && e <= 7)
+              .toList();
+        }
+      } else {
+        return const [];
+      }
+
+      final parts = startTimeString.split(':');
+      final startTime = TimeOfDay(
+        hour: int.parse(parts[0]),
+        minute: int.parse(parts[1]),
+      );
+
+      return generateOccurrences(
+        start: start,
+        end: end,
+        weekdays: weekdays,
+        startTime: startTime,
+      );
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Gets the next occurrence after a given date
@@ -153,23 +178,47 @@ class ScheduleService {
 
   /// Generate class dates for a subject
   static List<DateTime> generateClassDates(
-    dynamic subject,
+    dynamic subject, // Accepts Subject or Map for preview usage
     DateTime start,
     DateTime end,
   ) {
-    // Parse start time from subject
-    final timeParts = subject.startTime.split(':');
-    final startTime = TimeOfDay(
-      hour: int.parse(timeParts[0]),
-      minute: int.parse(timeParts[1]),
-    );
+    try {
+      String startTimeString = '09:00';
+      List<int> weekdays = const [];
 
-    return generateOccurrences(
-      start: start,
-      end: end,
-      weekdays: subject.weekdays,
-      startTime: startTime,
-    );
+      if (subject is Subject) {
+        startTimeString = subject.startTime;
+        weekdays = subject.weekdays;
+      } else if (subject is Map) {
+        startTimeString = (subject['startTime'] ?? '09:00').toString();
+        final rawWeekdays = subject['weekdays'];
+        if (rawWeekdays is List<int>) {
+          weekdays = rawWeekdays;
+        } else if (rawWeekdays is List) {
+          weekdays = rawWeekdays
+              .map((e) => int.tryParse(e.toString()) ?? 0)
+              .where((e) => e >= 1 && e <= 7)
+              .toList();
+        }
+      } else {
+        return const [];
+      }
+
+      final parts = startTimeString.split(':');
+      final startTime = TimeOfDay(
+        hour: int.parse(parts[0]),
+        minute: int.parse(parts[1]),
+      );
+
+      return generateOccurrences(
+        start: start,
+        end: end,
+        weekdays: weekdays,
+        startTime: startTime,
+      );
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Validate schedule for a subject
@@ -250,10 +299,37 @@ class ScheduleService {
     final endDate = now.add(Duration(days: daysAhead));
 
     for (final subject in subjects) {
-      if (subject.weekdays.isEmpty) continue;
+      // Accept both Subject and Map defensively
+      String startTimeString = '09:00';
+      List<int> weekdays = const [];
+      String subjectId = '';
+      String subjectName = '';
 
-      // Parse start time from subject
-      final timeParts = subject.startTime.split(':');
+      if (subject is Subject) {
+        startTimeString = subject.startTime;
+        weekdays = subject.weekdays;
+        subjectId = subject.id;
+        subjectName = subject.name;
+      } else if (subject is Map) {
+        startTimeString = (subject['startTime'] ?? '09:00').toString();
+        final rawWeekdays = subject['weekdays'];
+        if (rawWeekdays is List<int>) {
+          weekdays = rawWeekdays;
+        } else if (rawWeekdays is List) {
+          weekdays = rawWeekdays
+              .map((e) => int.tryParse(e.toString()) ?? 0)
+              .where((e) => e >= 1 && e <= 7)
+              .toList();
+        }
+        subjectId = (subject['id'] ?? '').toString();
+        subjectName = (subject['name'] ?? '').toString();
+      } else {
+        continue;
+      }
+
+      if (weekdays.isEmpty) continue;
+
+      final timeParts = startTimeString.split(':');
       final startTime = TimeOfDay(
         hour: int.parse(timeParts[0]),
         minute: int.parse(timeParts[1]),
@@ -271,8 +347,8 @@ class ScheduleService {
       for (final classDate in classDates) {
         upcomingClasses.add({
           'subject': subject,
-          'subjectId': subject.id,
-          'subjectName': subject.name,
+          'subjectId': subjectId,
+          'subjectName': subjectName,
           'date': classDate,
           'time': startTime,
           'dayName': _getDayName(classDate.weekday),
@@ -318,19 +394,41 @@ class ScheduleService {
     final List<Map<String, dynamic>> classesOnDate = [];
 
     for (final subject in subjects) {
-      if (subject.weekdays.isEmpty) continue;
+      String startTimeString = '09:00';
+      List<int> weekdays = const [];
+      String subjectId = '';
+      String subjectName = '';
 
-      // Check if subject has class on this weekday
-      if (!subject.weekdays.contains(date.weekday)) continue;
+      if (subject is Subject) {
+        startTimeString = subject.startTime;
+        weekdays = subject.weekdays;
+        subjectId = subject.id;
+        subjectName = subject.name;
+      } else if (subject is Map) {
+        startTimeString = (subject['startTime'] ?? '09:00').toString();
+        final rawWeekdays = subject['weekdays'];
+        if (rawWeekdays is List<int>) {
+          weekdays = rawWeekdays;
+        } else if (rawWeekdays is List) {
+          weekdays = rawWeekdays
+              .map((e) => int.tryParse(e.toString()) ?? 0)
+              .where((e) => e >= 1 && e <= 7)
+              .toList();
+        }
+        subjectId = (subject['id'] ?? '').toString();
+        subjectName = (subject['name'] ?? '').toString();
+      } else {
+        continue;
+      }
 
-      // Parse start time from subject
-      final timeParts = subject.startTime.split(':');
+      if (!weekdays.contains(date.weekday)) continue;
+
+      final timeParts = startTimeString.split(':');
       final startTime = TimeOfDay(
         hour: int.parse(timeParts[0]),
         minute: int.parse(timeParts[1]),
       );
 
-      // Create the class date with the specific time
       final classDateTime = DateTime(
         date.year,
         date.month,
@@ -341,8 +439,8 @@ class ScheduleService {
 
       classesOnDate.add({
         'subject': subject,
-        'subjectId': subject.id,
-        'subjectName': subject.name,
+        'subjectId': subjectId,
+        'subjectName': subjectName,
         'date': classDateTime,
         'time': startTime,
         'dayName': _getDayName(date.weekday),

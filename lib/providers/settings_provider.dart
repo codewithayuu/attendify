@@ -17,12 +17,20 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     await HiveService.updateSettings(newSettings);
     state = newSettings;
 
-    // Update notification settings
-    await NotificationService.updateNotificationSettings(newSettings);
+    // Update notification settings (with error handling)
+    try {
+      await NotificationService.updateNotificationSettings(newSettings);
+    } catch (e) {
+      print('⚠️ Failed to update notification settings: $e');
+    }
 
-    // Sync to cloud if enabled
+    // Sync to cloud if enabled (with error handling)
     if (newSettings.enableFirebaseSync && FirebaseService.isSignedIn) {
-      await FirebaseService.syncSettingsToCloud(newSettings);
+      try {
+        await FirebaseService.syncSettingsToCloud(newSettings);
+      } catch (e) {
+        print('⚠️ Failed to sync settings to cloud: $e');
+      }
     }
   }
 

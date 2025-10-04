@@ -1,0 +1,16 @@
+{
+  "status": "init",
+  "scope": "codebase",
+  "type": "frontend",
+  "localEndpoint": "http://localhost:5173",
+  "serverPort": 45439,
+  "executionArgs": {
+    "projectName": "attendance_tracker",
+    "projectPath": "/home/ayu/project/attendify/attendance_tracker",
+    "testIds": [],
+    "additionalInstruction": "Focus on Analytics screen rendering and data providers. Verify that when subjects list is non-empty, Analytics shows Overall Performance card, Subject-wise Attendance section, Weekly/Monthly stats, and 30-Day Trend. Also verify blank state when subjects are empty.",
+    "envs": {
+      "API_KEY": "sk-user-99rPoF3jE7BlFUrAkLSfrRr7UfCRj3E342FaKRwN3UrnmfnpCcfUNloSmFnCG0pj7wtllcnHUholurtm_PHHG5AHnemY4_kLBVotEVcc2qjBi18y-bVkSAQv6WRLGymL02A"
+    }
+  }
+}

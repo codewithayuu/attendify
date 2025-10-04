@@ -9,7 +9,7 @@ void main() {
         final start = DateTime(2024, 1, 1); // Monday
         final end = DateTime(2024, 1, 31);
         final weekdays = [1]; // Monday only
-        final startTime = const TimeOfDay(hour: 9, minute: 0);
+        const startTime = TimeOfDay(hour: 9, minute: 0);
 
         final occurrences = ScheduleService.generateOccurrences(
           start: start,
@@ -36,7 +36,7 @@ void main() {
         final start = DateTime(2024, 1, 1); // Monday
         final end = DateTime(2024, 1, 7); // Sunday
         final weekdays = [1, 3, 5]; // Mon, Wed, Fri
-        final startTime = const TimeOfDay(hour: 14, minute: 30);
+        const startTime = TimeOfDay(hour: 14, minute: 30);
 
         final occurrences = ScheduleService.generateOccurrences(
           start: start,
@@ -58,7 +58,7 @@ void main() {
         final start = DateTime(2024, 1, 1);
         final end = DateTime(2024, 1, 31);
         final weekdays = <int>[];
-        final startTime = const TimeOfDay(hour: 9, minute: 0);
+        const startTime = TimeOfDay(hour: 9, minute: 0);
 
         final occurrences = ScheduleService.generateOccurrences(
           start: start,
@@ -73,7 +73,7 @@ void main() {
       test('should handle same start and end date', () {
         final date = DateTime(2024, 1, 1); // Monday
         final weekdays = [1]; // Monday
-        final startTime = const TimeOfDay(hour: 10, minute: 15);
+        const startTime = TimeOfDay(hour: 10, minute: 15);
 
         final occurrences = ScheduleService.generateOccurrences(
           start: date,
@@ -90,7 +90,7 @@ void main() {
         final start = DateTime(2024, 1, 10);
         final end = DateTime(2024, 1, 1);
         final weekdays = [1, 2, 3, 4, 5];
-        final startTime = const TimeOfDay(hour: 9, minute: 0);
+        const startTime = TimeOfDay(hour: 9, minute: 0);
 
         final occurrences = ScheduleService.generateOccurrences(
           start: start,
@@ -106,7 +106,7 @@ void main() {
     group('getNextOccurrence', () {
       test('should find next occurrence after given date', () {
         final weekdays = [1, 3, 5]; // Mon, Wed, Fri
-        final startTime = const TimeOfDay(hour: 9, minute: 0);
+        const startTime = TimeOfDay(hour: 9, minute: 0);
         final after = DateTime(2024, 1, 2); // Tuesday
 
         final nextOccurrence = ScheduleService.getNextOccurrence(
@@ -121,7 +121,7 @@ void main() {
 
       test('should find next occurrence when current day is included', () {
         final weekdays = [1, 3, 5]; // Mon, Wed, Fri
-        final startTime = const TimeOfDay(hour: 9, minute: 0);
+        const startTime = TimeOfDay(hour: 9, minute: 0);
         final after = DateTime(2024, 1, 1, 8, 0); // Monday 8 AM
 
         final nextOccurrence = ScheduleService.getNextOccurrence(
@@ -136,7 +136,7 @@ void main() {
 
       test('should find next occurrence when current day time has passed', () {
         final weekdays = [1, 3, 5]; // Mon, Wed, Fri
-        final startTime = const TimeOfDay(hour: 9, minute: 0);
+        const startTime = TimeOfDay(hour: 9, minute: 0);
         final after = DateTime(2024, 1, 1, 10, 0); // Monday 10 AM
 
         final nextOccurrence = ScheduleService.getNextOccurrence(
@@ -151,7 +151,7 @@ void main() {
 
       test('should return null for empty weekdays', () {
         final weekdays = <int>[];
-        final startTime = const TimeOfDay(hour: 9, minute: 0);
+        const startTime = TimeOfDay(hour: 9, minute: 0);
         final after = DateTime(2024, 1, 1);
 
         final nextOccurrence = ScheduleService.getNextOccurrence(
@@ -167,7 +167,7 @@ void main() {
     group('getCurrentMonthOccurrences', () {
       test('should generate occurrences for current month', () {
         final weekdays = [1, 3, 5]; // Mon, Wed, Fri
-        final startTime = const TimeOfDay(hour: 9, minute: 0);
+        const startTime = TimeOfDay(hour: 9, minute: 0);
 
         final occurrences = ScheduleService.getCurrentMonthOccurrences(
           weekdays: weekdays,

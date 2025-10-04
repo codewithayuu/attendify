@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'attendance.g.dart';
 
-@HiveType(typeId: 4)
+@HiveType(typeId: 1)
 class Attendance extends HiveObject {
   @HiveField(0)
   final String id;
@@ -75,6 +75,18 @@ class Attendance extends HiveObject {
   String get dayOfWeek {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return days[date.weekday - 1];
+  }
+
+  // Convert to Map (for compatibility)
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'subjectId': subjectId,
+      'date': date.toIso8601String(),
+      'present': present,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
   }
 
   @override
