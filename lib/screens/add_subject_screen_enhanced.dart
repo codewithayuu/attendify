@@ -59,6 +59,12 @@ class _AddSubjectScreenEnhancedState
     'Sunday'
   ];
 
+  String _weekdayAbbrev(int weekday) {
+    // weekday: 1=Mon ... 7=Sun
+    final name = _weekdayNames[weekday - 1];
+    return name.substring(0, 3);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -355,7 +361,8 @@ class _AddSubjectScreenEnhancedState
                 Expanded(
                   child: RadioListTile<bool>(
                     dense: true,
-                    visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                    visualDensity:
+                        const VisualDensity(horizontal: -2, vertical: -2),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                     title: const Text(
                       'Regular weekly',
@@ -379,7 +386,8 @@ class _AddSubjectScreenEnhancedState
                 Expanded(
                   child: RadioListTile<bool>(
                     dense: true,
-                    visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                    visualDensity:
+                        const VisualDensity(horizontal: -2, vertical: -2),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                     title: const Text(
                       'One-time',
@@ -427,7 +435,8 @@ class _AddSubjectScreenEnhancedState
                 Expanded(
                   child: ListTile(
                     dense: true,
-                    visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                    visualDensity:
+                        const VisualDensity(horizontal: -2, vertical: -2),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                     horizontalTitleGap: 8,
                     minLeadingWidth: 24,
@@ -450,7 +459,8 @@ class _AddSubjectScreenEnhancedState
                 Expanded(
                   child: ListTile(
                     dense: true,
-                    visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                    visualDensity:
+                        const VisualDensity(horizontal: -2, vertical: -2),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                     horizontalTitleGap: 8,
                     minLeadingWidth: 24,
@@ -496,6 +506,11 @@ class _AddSubjectScreenEnhancedState
       semesterEnd,
     );
 
+    final startStr = MaterialLocalizations.of(context)
+        .formatTimeOfDay(_startTime, alwaysUse24HourFormat: MediaQuery.of(context).alwaysUse24HourFormat);
+    final endStr = MaterialLocalizations.of(context)
+        .formatTimeOfDay(_endTime, alwaysUse24HourFormat: MediaQuery.of(context).alwaysUse24HourFormat);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -532,22 +547,33 @@ class _AddSubjectScreenEnhancedState
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 6),
                       if (_selectedWeekdays.isNotEmpty)
-                        Text(
-                          'Days: ${_selectedWeekdays.map((day) => _weekdayNames[day - 1]).join(', ')}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: _selectedWeekdays
+                              .map((d) => Chip(
+                                    label: Text(_weekdayAbbrev(d)),
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 0),
+                                  ))
+                              .toList(),
                         ),
-                      Text(
-                        'Time: $_startTime - $_endTime',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      const SizedBox(height: 6),
+                      _InfoRow(
+                        icon: Icons.schedule,
+                        label: '$startStr - $endStr',
                       ),
-                      Text(
-                        'Total Classes: ${classDates.length}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).primaryColor,
-                            ),
+                      const SizedBox(height: 4),
+                      _InfoRow(
+                        icon: Icons.calendar_month,
+                        label: 'Total Classes: ${classDates.length}',
                       ),
                     ],
                   ),
@@ -826,5 +852,30 @@ class _AddSubjectScreenEnhancedState
         );
       }
     }
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _InfoRow({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
 }
