@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -709,7 +710,29 @@ class SettingsScreen extends ConsumerWidget {
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Bug Report Form'),
-              content: const Text('Please visit the following URL to report a bug:\n\nhttps://forms.gle/Fc4iXnyGKUnDuMgr8'),
+              content: RichText(
+                text: TextSpan(
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  children: [
+                    const TextSpan(text: 'Please visit the following URL to report a bug:\n\n'),
+                    TextSpan(
+                      text: 'https://forms.gle/Fc4iXnyGKUnDuMgr8',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          try {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          } catch (e) {
+                            // If it still fails, do nothing
+                          }
+                        },
+                    ),
+                  ],
+                ),
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -727,7 +750,29 @@ class SettingsScreen extends ConsumerWidget {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Error'),
-            content: const Text('Could not open the bug report form. Please visit: https://forms.gle/Fc4iXnyGKUnDuMgr8'),
+            content: RichText(
+              text: TextSpan(
+                style: Theme.of(context).textTheme.bodyMedium,
+                children: [
+                  const TextSpan(text: 'Could not open the bug report form. Please visit: '),
+                  TextSpan(
+                    text: 'https://forms.gle/Fc4iXnyGKUnDuMgr8',
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () async {
+                        try {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } catch (e) {
+                          // If it still fails, do nothing
+                        }
+                      },
+                  ),
+                ],
+              ),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
