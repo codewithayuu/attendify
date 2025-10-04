@@ -19,6 +19,7 @@ class SubjectListNotifier extends StateNotifier<List<Subject>> {
   Future<void> loadSubjects() async {
     final subjects = HiveService.getAllSubjects();
     state = subjects;
+    // If empty, do NOT repopulate here; defaults are handled only at init
   }
 
   // Add new subject
@@ -57,6 +58,22 @@ class SubjectListNotifier extends StateNotifier<List<Subject>> {
     }
   }
 
+  // Batch delete subjects
+  Future<void> deleteSubjectsBatch(Iterable<String> subjectIds) async {
+    // Delete exact ids only; no other data manipulation
+    for (final id in subjectIds) {
+      await HiveService.deleteSubject(id);
+    }
+    final idSet = subjectIds.toSet();
+    state = state.where((s) => !idSet.contains(s.id)).toList();
+
+    // Sync to cloud if enabled
+    final settings = HiveService.getSettings();
+    if (settings.enableFirebaseSync && FirebaseService.isSignedIn) {
+      await FirebaseService.syncSubjectsToCloud(state);
+    }
+  }
+
   // Mark attendance for a subject
   Future<void> markAttendance(String subjectId, bool isPresent) async {
     final subjectIndex = state.indexWhere((s) => s.id == subjectId);
@@ -82,6 +99,26 @@ class SubjectListNotifier extends StateNotifier<List<Subject>> {
 
     final subject = state[subjectIndex];
     final updatedSubject = subject.undoLastAttendance(wasPresent: wasPresent);
+
+    await HiveService.updateSubject(updatedSubject);
+    state = state.map((s) => s.id == subjectId ? updatedSubject : s).toList();
+
+    // Sync to cloud if enabled
+    final settings = HiveService.getSettings();
+    if (settings.enableFirebaseSync && FirebaseService.isSignedIn) {
+      await FirebaseService.syncSubjectsToCloud(state);
+    }
+  }
+
+  // Adjust attended count only (do not change totalClasses)
+  Future<void> adjustAttendedOnly(String subjectId, int delta) async {
+    final subjectIndex = state.indexWhere((s) => s.id == subjectId);
+    if (subjectIndex == -1 || delta == 0) return;
+
+    final subject = state[subjectIndex];
+    final nextAttended =
+        (subject.attendedClasses + delta).clamp(0, subject.totalClasses);
+    final updatedSubject = subject.copyWith(attendedClasses: nextAttended);
 
     await HiveService.updateSubject(updatedSubject);
     state = state.map((s) => s.id == subjectId ? updatedSubject : s).toList();

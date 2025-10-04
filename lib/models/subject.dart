@@ -82,9 +82,16 @@ class Subject extends HiveObject {
 
   // Calculate attendance percentage based on attendance records
   double get attendancePercentage {
-    if (attendanceRecords.isEmpty) return 0.0;
-    final presentCount = attendanceRecords.where((a) => a.present).length;
-    return (presentCount / attendanceRecords.length) * 100;
+    if (attendanceRecords.isNotEmpty) {
+      final presentCount = attendanceRecords.where((a) => a.present).length;
+      return ((presentCount / attendanceRecords.length) * 100)
+          .clamp(0.0, 100.0);
+    }
+    // Fallback to counters when detailed records aren't used
+    if (totalClasses > 0) {
+      return ((attendedClasses / totalClasses) * 100).clamp(0.0, 100.0);
+    }
+    return 0.0;
   }
 
   // Factory method to convert from Map (for compatibility)
@@ -95,25 +102,24 @@ class Subject extends HiveObject {
       totalClasses: map['totalClasses'] ?? 0,
       attendedClasses: map['attendedClasses'] ?? 0,
       description: map['description'],
-      createdAt: map['createdAt'] != null 
+      createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'].toString())
           : DateTime.now(),
-      updatedAt: map['updatedAt'] != null 
+      updatedAt: map['updatedAt'] != null
           ? DateTime.parse(map['updatedAt'].toString())
           : DateTime.now(),
       colorHex: map['colorHex'],
-      weekdays: map['weekdays'] != null 
-          ? List<int>.from(map['weekdays'])
-          : <int>[],
+      weekdays:
+          map['weekdays'] != null ? List<int>.from(map['weekdays']) : <int>[],
       startTime: map['startTime'] ?? '09:00',
       endTime: map['endTime'] ?? '10:00',
-      semesterStart: map['semesterStart'] != null 
+      semesterStart: map['semesterStart'] != null
           ? DateTime.parse(map['semesterStart'].toString())
           : DateTime.now(),
-      semesterEnd: map['semesterEnd'] != null 
+      semesterEnd: map['semesterEnd'] != null
           ? DateTime.parse(map['semesterEnd'].toString())
           : DateTime.now().add(const Duration(days: 90)),
-      attendanceRecords: map['attendanceRecords'] != null 
+      attendanceRecords: map['attendanceRecords'] != null
           ? List<Attendance>.from(map['attendanceRecords'])
           : <Attendance>[],
       recurringWeekly: map['recurringWeekly'] ?? true,

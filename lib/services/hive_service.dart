@@ -56,10 +56,10 @@ class HiveService {
     // Initialize default settings if not exists
     await _initializeDefaultSettings();
 
-    // Initialize default subjects if none exist
+    // Initialize default subjects only on first install
     await DefaultSubjectsService.initializeDefaultSubjects();
 
-    // Force reinitialize subjects with proper fields if they don't have weekdays
+    // Validate subjects non-destructively
     await _ensureSubjectsHaveRequiredFields();
 
     // Data is now stored correctly as Subject objects
@@ -428,23 +428,45 @@ class HiveService {
 
   // Ensure all subjects have the required new fields
   static Future<void> _ensureSubjectsHaveRequiredFields() async {
+    // Non-destructive sanity pass. Never clear user data here.
     final subjects = _subjectsBox!.values.toList();
-    bool needsUpdate = false;
+    bool anyChanged = false;
 
     for (final subject in subjects) {
-      // Check if subject is missing required fields
-      if (subject.weekdays.isEmpty ||
-          subject.startTime == '09:00' && subject.endTime == '10:00') {
-        needsUpdate = true;
-        break;
+      bool changed = false;
+
+      // Filter invalid weekday values defensively
+      final validWeekdays = subject.weekdays
+          .where((d) => d >= 1 && d <= 7)
+          .toList(growable: false);
+      if (validWeekdays.length != subject.weekdays.length) {
+        subject.weekdays = validWeekdays;
+        changed = true;
+      }
+
+      // Ensure time strings are in HH:mm (basic guard, keep user values)
+      bool _isValidTime(String s) =>
+          RegExp(r'^\d{2}:\d{2} ?').hasMatch(s) ||
+          RegExp(r'^\d{2}:\d{2}$').hasMatch(s);
+      if (!_isValidTime(subject.startTime)) {
+        subject.startTime = '09:00';
+        changed = true;
+      }
+      if (!_isValidTime(subject.endTime)) {
+        subject.endTime = '10:00';
+        changed = true;
+      }
+
+      if (changed) {
+        anyChanged = true;
+        await _subjectsBox!.put(subject.id, subject);
       }
     }
 
-    if (needsUpdate) {
-      print('🔄 Updating subjects with required fields...');
-      await _subjectsBox!.clear();
-      await DefaultSubjectsService.initializeDefaultSubjects();
-      print('✅ Subjects updated with required fields');
+    if (anyChanged) {
+      print('✅ Subjects sanitized with non-destructive updates');
+    } else {
+      print('✅ Subjects OK');
     }
   }
 

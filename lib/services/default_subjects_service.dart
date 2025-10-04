@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subject.dart';
 import 'hive_service.dart';
 
@@ -60,12 +61,16 @@ class DefaultSubjectsService {
     },
   ];
 
-  // Initialize default subjects if none exist
+  // Initialize default subjects only on first install (never after user deletes)
   static Future<void> initializeDefaultSubjects() async {
+    const flagKey = 'defaults_initialized_v1';
+    final prefs = await SharedPreferences.getInstance();
+    final alreadyInitialized = prefs.getBool(flagKey) ?? false;
+
     final existingSubjects = HiveService.getAllSubjects();
-    
-    // Only add default subjects if no subjects exist
-    if (existingSubjects.isEmpty) {
+
+    // Only populate once: when app is first run (box empty) AND not initialized before
+    if (!alreadyInitialized && existingSubjects.isEmpty) {
       for (final subjectData in _defaultSubjects) {
         final subject = Subject(
           name: subjectData['name'],
@@ -74,15 +79,17 @@ class DefaultSubjectsService {
           totalClasses: 0,
           attendedClasses: 0,
           // Add new required fields with proper defaults
-          weekdays: [1, 3, 5], // Monday, Wednesday, Friday
+          weekdays: const [1, 3, 5], // Monday, Wednesday, Friday
           startTime: '09:00',
           endTime: '10:00',
           recurringWeekly: true,
           requiredPercent: null, // Use global default
         );
-        
+
         await HiveService.addSubject(subject);
       }
+
+      await prefs.setBool(flagKey, true);
     }
   }
 
@@ -100,11 +107,15 @@ class DefaultSubjectsService {
     }
 
     // Add default subjects
+    // For an explicit reset, we also re-enable defaults population
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('defaults_initialized_v1', false);
     await initializeDefaultSubjects();
   }
 
   // Add a single default subject
-  static Future<void> addDefaultSubject(Map<String, dynamic> subjectData) async {
+  static Future<void> addDefaultSubject(
+      Map<String, dynamic> subjectData) async {
     final subject = Subject(
       name: subjectData['name'],
       description: subjectData['description'],
@@ -118,39 +129,44 @@ class DefaultSubjectsService {
       recurringWeekly: true,
       requiredPercent: null, // Use global default
     );
-    
+
     await HiveService.addSubject(subject);
   }
 
   // Check if a subject name already exists
   static bool subjectExists(String subjectName) {
     final existingSubjects = HiveService.getAllSubjects();
-    return existingSubjects.any((subject) => 
-        subject.name.toLowerCase() == subjectName.toLowerCase());
+    return existingSubjects.any(
+        (subject) => subject.name.toLowerCase() == subjectName.toLowerCase());
   }
 
   // Get subjects that are missing from defaults
   static List<Map<String, dynamic>> getMissingDefaultSubjects() {
     final existingSubjects = HiveService.getAllSubjects();
-    final existingNames = existingSubjects.map((s) => s.name.toLowerCase()).toSet();
-    
-    return _defaultSubjects.where((defaultSubject) => 
-        !existingNames.contains(defaultSubject['name'].toLowerCase())).toList();
+    final existingNames =
+        existingSubjects.map((s) => s.name.toLowerCase()).toSet();
+
+    return _defaultSubjects
+        .where((defaultSubject) =>
+            !existingNames.contains(defaultSubject['name'].toLowerCase()))
+        .toList();
   }
 
   // Get subjects that are not in defaults (custom subjects)
   static List<Subject> getCustomSubjects() {
     final existingSubjects = HiveService.getAllSubjects();
-    final defaultNames = _defaultSubjects.map((s) => s['name'].toLowerCase()).toSet();
-    
-    return existingSubjects.where((subject) => 
-        !defaultNames.contains(subject.name.toLowerCase())).toList();
+    final defaultNames =
+        _defaultSubjects.map((s) => s['name'].toLowerCase()).toSet();
+
+    return existingSubjects
+        .where((subject) => !defaultNames.contains(subject.name.toLowerCase()))
+        .toList();
   }
 
   // Add missing default subjects
   static Future<void> addMissingDefaultSubjects() async {
     final missingSubjects = getMissingDefaultSubjects();
-    
+
     for (final subjectData in missingSubjects) {
       await addDefaultSubject(subjectData);
     }
@@ -167,7 +183,7 @@ class DefaultSubjectsService {
     final defaultSubjects = _defaultSubjects.length;
     final customSubjects = getCustomSubjects().length;
     final missingDefaults = getMissingDefaultSubjects().length;
-    
+
     return {
       'totalSubjects': existingSubjects.length,
       'defaultSubjects': defaultSubjects,
@@ -177,4 +193,3 @@ class DefaultSubjectsService {
     };
   }
 }
-

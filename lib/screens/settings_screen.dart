@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/settings_provider.dart';
 import '../providers/theme_provider.dart';
@@ -150,6 +152,11 @@ class SettingsScreen extends ConsumerWidget {
         _buildAboutTile(context)
             .animate()
             .fadeIn(duration: 300.ms, delay: 1800.ms)
+            .slideX(),
+
+        _buildBugReportTile(context)
+            .animate()
+            .fadeIn(duration: 300.ms, delay: 1850.ms)
             .slideX(),
 
         // Debug section (only in debug mode)
@@ -382,7 +389,7 @@ class SettingsScreen extends ConsumerWidget {
       child: ListTile(
         title: const Text('Global Attendance Threshold'),
         subtitle: Text(
-            'Default required percentage: ${settings.defaultRequiredPercent}%'),
+            'Default required percentage: ${settings.defaultRequiredPercent.toStringAsFixed(0)}%'),
         leading: const Icon(Icons.percent),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
@@ -467,14 +474,34 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildAboutTile(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final version = snapshot.hasData ? '${snapshot.data!.version}+${snapshot.data!.buildNumber}' : '1.1.0+1';
+        return Card(
+          child: ListTile(
+            title: const Text('About'),
+            subtitle: Text('Attendify v$version'),
+            leading: const Icon(Icons.info),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              _showAboutDialog(context, version);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBugReportTile(BuildContext context) {
     return Card(
       child: ListTile(
-        title: const Text('About'),
-        subtitle: const Text('Attendance Tracker v1.0.0'),
-        leading: const Icon(Icons.info),
+        title: const Text('Report Bug'),
+        subtitle: const Text('Help us improve by reporting issues'),
+        leading: const Icon(Icons.bug_report),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
-          _showAboutDialog(context);
+          _openBugReportForm(context);
         },
       ),
     );
@@ -648,11 +675,11 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
+  void _showAboutDialog(BuildContext context, String version) {
     showAboutDialog(
       context: context,
-      applicationName: 'Attendance Tracker',
-      applicationVersion: '1.0.0',
+      applicationName: 'Attendify',
+      applicationVersion: version,
       applicationIcon: const Icon(Icons.school, size: 48),
       children: [
         const Text(
@@ -666,6 +693,51 @@ class SettingsScreen extends ConsumerWidget {
         const Text('• Data export/import'),
       ],
     );
+  }
+
+  void _openBugReportForm(BuildContext context) async {
+    const url = 'https://forms.gle/Fc4iXnyGKUnDuMgr8';
+    final uri = Uri.parse(url);
+    
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback: show a dialog with the URL
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Bug Report Form'),
+              content: const Text('Please visit the following URL to report a bug:\n\nhttps://forms.gle/Fc4iXnyGKUnDuMgr8'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Show error dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Could not open the bug report form. Please visit: https://forms.gle/Fc4iXnyGKUnDuMgr8'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   void _showSemesterStartPicker(BuildContext context, WidgetRef ref, settings) {
@@ -703,40 +775,48 @@ class SettingsScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, settings) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Global Attendance Threshold'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Current threshold: ${settings.defaultRequiredPercent}%'),
-            const SizedBox(height: 16),
-            Slider(
-              value: settings.defaultRequiredPercent,
-              min: 0,
-              max: 100,
-              divisions: 20,
-              label: '${settings.defaultRequiredPercent}%',
-              onChanged: (value) {
-                ref
-                    .read(settingsProvider.notifier)
-                    .updateDefaultRequiredPercent(value);
-              },
+      builder: (context) {
+        double current = settings.defaultRequiredPercent;
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Global Attendance Threshold'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Current threshold: ${current.toStringAsFixed(0)}%'),
+                const SizedBox(height: 16),
+                Slider(
+                  value: current.clamp(0, 100),
+                  min: 0,
+                  max: 100,
+                  divisions: 20,
+                  label: '${current.toStringAsFixed(0)}%',
+                  onChanged: (value) {
+                    setState(() => current = value);
+                  },
+                  onChangeEnd: (value) {
+                    ref
+                        .read(settingsProvider.notifier)
+                        .updateDefaultRequiredPercent(value);
+                  },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'This is the default required attendance percentage for all subjects. Individual subjects can override this value.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'This is the default required attendance percentage for all subjects. Individual subjects can override this value.',
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Done'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Done'),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -758,7 +838,8 @@ class SettingsScreen extends ConsumerWidget {
             await HiveService.clearSubjectsBox();
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Subjects box cleared and recreated')),
+                const SnackBar(
+                    content: Text('Subjects box cleared and recreated')),
               );
             }
           },
@@ -772,7 +853,8 @@ class SettingsScreen extends ConsumerWidget {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Clear All Data'),
-                content: const Text('This will permanently delete all subjects, attendance records, and settings. Are you sure?'),
+                content: const Text(
+                    'This will permanently delete all subjects, attendance records, and settings. Are you sure?'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -780,12 +862,13 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Clear All', style: TextStyle(color: Colors.red)),
+                    child: const Text('Clear All',
+                        style: TextStyle(color: Colors.red)),
                   ),
                 ],
               ),
             );
-            
+
             if (confirmed == true) {
               await HiveService.forceClearAllData();
               if (context.mounted) {

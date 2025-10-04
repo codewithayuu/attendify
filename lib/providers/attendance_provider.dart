@@ -86,11 +86,34 @@ class AttendanceRecordsNotifier extends StateNotifier<List<AttendanceRecord>> {
       String subjectId, AttendanceStatus status) async {
     // Check if already marked for today
     if (HiveService.isAttendanceMarkedForToday(subjectId)) {
-      // Update existing record
+      // Toggle logic: same status => revert to Unmarked; otherwise set to new status
       final existingRecord = HiveService.getTodayAttendanceRecord(subjectId);
       if (existingRecord != null) {
-        final updatedRecord = existingRecord.copyWith(status: status);
+        AttendanceStatus nextStatus = status;
+        if (existingRecord.status == status) {
+          nextStatus = AttendanceStatus.Unmarked;
+        }
+        final updatedRecord = existingRecord.copyWith(status: nextStatus);
         await updateAttendanceRecord(updatedRecord);
+
+        // Keep overall counters in sync with toggle
+        if (nextStatus == AttendanceStatus.Unmarked) {
+          final subjectNotifier = ref.read(subjectListProvider.notifier);
+          await subjectNotifier.undoLastAttendance(
+              subjectId, existingRecord.status.countsAsPresent);
+        } else if (existingRecord.status.countsAsPresent !=
+            nextStatus.countsAsPresent) {
+          // Adjust subject counters if present/absent parity changed
+          if (nextStatus.countsAsPresent) {
+            await ref
+                .read(subjectListProvider.notifier)
+                .adjustAttendedOnly(subjectId, 1);
+          } else {
+            await ref
+                .read(subjectListProvider.notifier)
+                .adjustAttendedOnly(subjectId, -1);
+          }
+        }
       }
     } else {
       // Create new record

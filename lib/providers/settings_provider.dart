@@ -3,6 +3,7 @@ import '../models/app_settings.dart';
 import '../services/hive_service.dart';
 import '../services/firebase_service.dart';
 import '../services/notification_service.dart';
+import '../services/semester_service.dart';
 
 // Settings provider
 final settingsProvider =
@@ -91,11 +92,24 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   Future<void> updateSemesterStart(DateTime? semesterStart) async {
     final newSettings = state.copyWith(semesterStart: semesterStart);
     await updateSettings(newSettings);
+    if (semesterStart != null && state.semesterEnd != null) {
+      // Apply new dates to subjects as well
+      await SemesterService.applySemesterDatesToSubjects(
+        semesterStart,
+        state.semesterEnd!,
+      );
+    }
   }
 
   Future<void> updateSemesterEnd(DateTime? semesterEnd) async {
     final newSettings = state.copyWith(semesterEnd: semesterEnd);
     await updateSettings(newSettings);
+    if (state.semesterStart != null && semesterEnd != null) {
+      await SemesterService.applySemesterDatesToSubjects(
+        state.semesterStart!,
+        semesterEnd,
+      );
+    }
   }
 
   Future<void> updateDefaultRequiredPercent(
