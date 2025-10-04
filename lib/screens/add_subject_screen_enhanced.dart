@@ -354,8 +354,19 @@ class _AddSubjectScreenEnhancedState
               children: [
                 Expanded(
                   child: RadioListTile<bool>(
-                    title: const Text('Regular weekly'),
-                    subtitle: const Text('Repeats every week'),
+                    dense: true,
+                    visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    title: const Text(
+                      'Regular weekly',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: const Text(
+                      'Repeats every week',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     value: true,
                     groupValue: _recurringWeekly,
                     onChanged: (value) {
@@ -367,8 +378,19 @@ class _AddSubjectScreenEnhancedState
                 ),
                 Expanded(
                   child: RadioListTile<bool>(
-                    title: const Text('One-time'),
-                    subtitle: const Text('Single occurrence'),
+                    dense: true,
+                    visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    title: const Text(
+                      'One-time',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: const Text(
+                      'Single occurrence',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     value: false,
                     groupValue: _recurringWeekly,
                     onChanged: (value) {
@@ -404,20 +426,46 @@ class _AddSubjectScreenEnhancedState
               children: [
                 Expanded(
                   child: ListTile(
-                    title: const Text('Start Time'),
-                    subtitle: Text(_formatTimeOfDay(_startTime)),
+                    dense: true,
+                    visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    horizontalTitleGap: 8,
+                    minLeadingWidth: 24,
+                    title: const Text(
+                      'Start Time',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      _formatTimeOfDay(_startTime),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     leading: const Icon(Icons.schedule),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: const Icon(Icons.chevron_right, size: 20),
                     onTap: _selectStartTime,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: ListTile(
-                    title: const Text('End Time'),
-                    subtitle: Text(_formatTimeOfDay(_endTime)),
+                    dense: true,
+                    visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    horizontalTitleGap: 8,
+                    minLeadingWidth: 24,
+                    title: const Text(
+                      'End Time',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      _formatTimeOfDay(_endTime),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     leading: const Icon(Icons.schedule),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: const Icon(Icons.chevron_right, size: 20),
                     onTap: _selectEndTime,
                   ),
                 ),
